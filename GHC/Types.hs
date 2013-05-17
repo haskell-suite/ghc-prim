@@ -24,10 +24,6 @@ module GHC.Types (
 import GHC.Prim
 
 
-infixr 5 :
-
-data [] a = [] | a : [a]
-
 data {-# CTYPE "HsBool" #-} Bool = False | True
 
 {- | The character type 'Char' is an enumeration whose values represent
@@ -77,11 +73,3 @@ at some point, directly or indirectly, from @Main.main@.
 or the '>>' and '>>=' operations from the 'Monad' class.
 -}
 newtype IO a = IO (State# RealWorld -> (# State# RealWorld, a #))
-
-
--- | A data constructor used to box up all unlifted equalities
---
--- The type constructor is special in that GHC pretends that it
--- has kind (? -> ? -> Fact) rather than (* -> * -> *)
-data (~) a b = Eq# ((~#) a b)
-
