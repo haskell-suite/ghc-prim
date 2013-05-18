@@ -9,7 +9,7 @@ synopsis:       GHC primitives
 description:
     GHC primitives.
 cabal-version:  >=1.6
-build-type: Custom
+build-type: Simple
 
 source-repository head
     type:     git
