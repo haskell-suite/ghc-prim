@@ -1,5 +1,3 @@
-To compile ghc-prim with haskell-names, do something like this:
+To compile with haskell-names do
 
-    cabal configure -w gen-iface --haskell-suite -finclude-ghc-prim
-    cabal build
-    cabal install --only
+    cabal install --haskell-suite -w hs-gen-iface --gcc-option=-I/usr/lib/ghc/include --extra-include-dirs=/usr/lib/ghc/include --solver=topdown -f include-ghc-prim
