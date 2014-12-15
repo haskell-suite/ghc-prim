@@ -8,7 +8,7 @@ consumed by haddock.
 -- |
 -- Module      :  GHC.Prim
 -- 
--- Maintainer  :  cvs-ghc@haskell.org
+-- Maintainer  :  ghc-devs@haskell.org
 -- Stability   :  internal
 -- Portability :  non-portable (GHC extensions)
 --
@@ -17,52 +17,53 @@ consumed by haddock.
 -- module directly.
 --
 -----------------------------------------------------------------------------
+{-# LANGUAGE MagicHash, MultiParamTypeClasses, NoImplicitPrelude, UnboxedTuples #-}
 module GHC.Prim (
-	
+    
 -- * The word size story.
 -- |Haskell98 specifies that signed integers (type @Int@)
--- 	 must contain at least 30 bits. GHC always implements @Int@ using the primitive type @Int\#@, whose size equals
--- 	 the @MachDeps.h@ constant @WORD\_SIZE\_IN\_BITS@.
--- 	 This is normally set based on the @config.h@ parameter
--- 	 @SIZEOF\_HSWORD@, i.e., 32 bits on 32-bit machines, 64
--- 	 bits on 64-bit machines.  However, it can also be explicitly
--- 	 set to a smaller number, e.g., 31 bits, to allow the
--- 	 possibility of using tag bits. Currently GHC itself has only
--- 	 32-bit and 64-bit variants, but 30 or 31-bit code can be
--- 	 exported as an external core file for use in other back ends.
+--   must contain at least 30 bits. GHC always implements @Int@ using the primitive type @Int\#@, whose size equals
+--   the @MachDeps.h@ constant @WORD\_SIZE\_IN\_BITS@.
+--   This is normally set based on the @config.h@ parameter
+--   @SIZEOF\_HSWORD@, i.e., 32 bits on 32-bit machines, 64
+--   bits on 64-bit machines.  However, it can also be explicitly
+--   set to a smaller number, e.g., 31 bits, to allow the
+--   possibility of using tag bits. Currently GHC itself has only
+--   32-bit and 64-bit variants, but 30 or 31-bit code can be
+--   exported as an external core file for use in other back ends.
 -- 
--- 	 GHC also implements a primitive unsigned integer type @Word\#@ which always has the same number of bits as @Int\#@.
--- 	
--- 	 In addition, GHC supports families of explicit-sized integers
--- 	 and words at 8, 16, 32, and 64 bits, with the usual
--- 	 arithmetic operations, comparisons, and a range of
--- 	 conversions.  The 8-bit and 16-bit sizes are always
--- 	 represented as @Int\#@ and @Word\#@, and the
--- 	 operations implemented in terms of the the primops on these
--- 	 types, with suitable range restrictions on the results (using
--- 	 the @narrow$n$Int\#@ and @narrow$n$Word\#@ families
--- 	 of primops.  The 32-bit sizes are represented using @Int\#@ and @Word\#@ when @WORD\_SIZE\_IN\_BITS@
--- 	 $\geq$ 32; otherwise, these are represented using distinct
--- 	 primitive types @Int32\#@ and @Word32\#@. These (when
--- 	 needed) have a complete set of corresponding operations;
--- 	 however, nearly all of these are implemented as external C
--- 	 functions rather than as primops.  Exactly the same story
--- 	 applies to the 64-bit sizes.  All of these details are hidden
--- 	 under the @PrelInt@ and @PrelWord@ modules, which use
--- 	 @\#if@-defs to invoke the appropriate types and
--- 	 operators.
+--   GHC also implements a primitive unsigned integer type @Word\#@ which always has the same number of bits as @Int\#@.
 -- 
--- 	 Word size also matters for the families of primops for
--- 	 indexing\/reading\/writing fixed-size quantities at offsets
--- 	 from an array base, address, or foreign pointer.  Here, a
--- 	 slightly different approach is taken.  The names of these
--- 	 primops are fixed, but their /types/ vary according to
--- 	 the value of @WORD\_SIZE\_IN\_BITS@. For example, if word
--- 	 size is at least 32 bits then an operator like
--- 	 @indexInt32Array\#@ has type @ByteArray\# -> Int\# 	 -> Int\#@; otherwise it has type @ByteArray\# -> Int\# -> 	 Int32\#@.  This approach confines the necessary @\#if@-defs to this file; no conditional compilation is needed
--- 	 in the files that expose these primops.
+--   In addition, GHC supports families of explicit-sized integers
+--   and words at 8, 16, 32, and 64 bits, with the usual
+--   arithmetic operations, comparisons, and a range of
+--   conversions.  The 8-bit and 16-bit sizes are always
+--   represented as @Int\#@ and @Word\#@, and the
+--   operations implemented in terms of the the primops on these
+--   types, with suitable range restrictions on the results (using
+--   the @narrow$n$Int\#@ and @narrow$n$Word\#@ families
+--   of primops.  The 32-bit sizes are represented using @Int\#@ and @Word\#@ when @WORD\_SIZE\_IN\_BITS@
+--   $\geq$ 32; otherwise, these are represented using distinct
+--   primitive types @Int32\#@ and @Word32\#@. These (when
+--   needed) have a complete set of corresponding operations;
+--   however, nearly all of these are implemented as external C
+--   functions rather than as primops.  Exactly the same story
+--   applies to the 64-bit sizes.  All of these details are hidden
+--   under the @PrelInt@ and @PrelWord@ modules, which use
+--   @\#if@-defs to invoke the appropriate types and
+--   operators.
 -- 
--- 	 Finally, there are strongly deprecated primops for coercing
+--   Word size also matters for the families of primops for
+--   indexing\/reading\/writing fixed-size quantities at offsets
+--   from an array base, address, or foreign pointer.  Here, a
+--   slightly different approach is taken.  The names of these
+--   primops are fixed, but their /types/ vary according to
+--   the value of @WORD\_SIZE\_IN\_BITS@. For example, if word
+--   size is at least 32 bits then an operator like
+--   @indexInt32Array\#@ has type @ByteArray\# -> Int\#      -> Int\#@; otherwise it has type @ByteArray\# -> Int\# ->   Int32\#@.  This approach confines the necessary @\#if@-defs to this file; no conditional compilation is needed
+--   in the files that expose these primops.
+-- 
+--   Finally, there are strongly deprecated primops for coercing
 --          between @Addr\#@, the primitive type of machine
 --          addresses, and @Int\#@.  These are pretty bogus anyway,
 --          but will work on existing 32-bit and 64-bit GHC targets; they
@@ -70,203 +71,192 @@ module GHC.Prim (
 --          so are not available in this case.  
 
 
-	
+    
 -- * Char#
 -- |Operations on 31-bit characters.
 
 
-	Char#,
-	gtChar#,
-	geChar#,
-	eqChar#,
-	neChar#,
-	ltChar#,
-	leChar#,
-	ord#,
-	
+    Char#,
+    gtChar#,
+    geChar#,
+    eqChar#,
+    neChar#,
+    ltChar#,
+    leChar#,
+    ord#,
+    
 -- * Int#
 -- |Operations on native-size integers (30+ bits).
 
 
-	Int#,
-	(+#),
-	(-#),
-	(*#),
-	mulIntMayOflo#,
-	quotInt#,
-	remInt#,
-	quotRemInt#,
-	andI#,
-	orI#,
-	xorI#,
-	notI#,
-	negateInt#,
-	addIntC#,
-	subIntC#,
-	(>#),
-	(>=#),
-	(==#),
-	(/=#),
-	(<#),
-	(<=#),
-	chr#,
-	int2Word#,
-	int2Float#,
-	int2Double#,
-	word2Float#,
-	word2Double#,
-	uncheckedIShiftL#,
-	uncheckedIShiftRA#,
-	uncheckedIShiftRL#,
-	
+    Int#,
+    (+#),
+    (-#),
+    (*#),
+    mulIntMayOflo#,
+    quotInt#,
+    remInt#,
+    quotRemInt#,
+    andI#,
+    orI#,
+    xorI#,
+    notI#,
+    negateInt#,
+    addIntC#,
+    subIntC#,
+    (>#),
+    (>=#),
+    (==#),
+    (/=#),
+    (<#),
+    (<=#),
+    chr#,
+    int2Word#,
+    int2Float#,
+    int2Double#,
+    word2Float#,
+    word2Double#,
+    uncheckedIShiftL#,
+    uncheckedIShiftRA#,
+    uncheckedIShiftRL#,
+    
 -- * Word#
 -- |Operations on native-sized unsigned words (30+ bits).
 
 
-	Word#,
-	plusWord#,
-	plusWord2#,
-	minusWord#,
-	timesWord#,
-	timesWord2#,
-	quotWord#,
-	remWord#,
-	quotRemWord#,
-	quotRemWord2#,
-	and#,
-	or#,
-	xor#,
-	not#,
-	uncheckedShiftL#,
-	uncheckedShiftRL#,
-	word2Int#,
-	gtWord#,
-	geWord#,
-	eqWord#,
-	neWord#,
-	ltWord#,
-	leWord#,
-	popCnt8#,
-	popCnt16#,
-	popCnt32#,
-	popCnt64#,
-	popCnt#,
-	
+    Word#,
+    plusWord#,
+    plusWord2#,
+    minusWord#,
+    timesWord#,
+    timesWord2#,
+    quotWord#,
+    remWord#,
+    quotRemWord#,
+    quotRemWord2#,
+    and#,
+    or#,
+    xor#,
+    not#,
+    uncheckedShiftL#,
+    uncheckedShiftRL#,
+    word2Int#,
+    gtWord#,
+    geWord#,
+    eqWord#,
+    neWord#,
+    ltWord#,
+    leWord#,
+    popCnt8#,
+    popCnt16#,
+    popCnt32#,
+    popCnt64#,
+    popCnt#,
+    byteSwap16#,
+    byteSwap32#,
+    byteSwap64#,
+    byteSwap#,
+    
 -- * Narrowings
 -- |Explicit narrowing of native-sized ints or words.
 
 
-	narrow8Int#,
-	narrow16Int#,
-	narrow32Int#,
-	narrow8Word#,
-	narrow16Word#,
-	narrow32Word#,
-	
--- * Int64#
--- |Operations on 64-bit unsigned words. This type is only used 
--- 	 if plain @Int\#@ has less than 64 bits. In any case, the operations
--- 	 are not primops; they are implemented (if needed) as ccalls instead.
-
-
-	Int64#,
-	
--- * Word64#
--- |Operations on 64-bit unsigned words. This type is only used 
--- 	 if plain @Word\#@ has less than 64 bits. In any case, the operations
--- 	 are not primops; they are implemented (if needed) as ccalls instead.
-
-
-	Word64#,
-	
+    narrow8Int#,
+    narrow16Int#,
+    narrow32Int#,
+    narrow8Word#,
+    narrow16Word#,
+    narrow32Word#,
+    
 -- * Double#
 -- |Operations on double-precision (64 bit) floating-point numbers.
 
 
-	Double#,
-	(>##),
-	(>=##),
-	(==##),
-	(/=##),
-	(<##),
-	(<=##),
-	(+##),
-	(-##),
-	(*##),
-	(/##),
-	negateDouble#,
-	double2Int#,
-	double2Float#,
-	expDouble#,
-	logDouble#,
-	sqrtDouble#,
-	sinDouble#,
-	cosDouble#,
-	tanDouble#,
-	asinDouble#,
-	acosDouble#,
-	atanDouble#,
-	sinhDouble#,
-	coshDouble#,
-	tanhDouble#,
-	(**##),
-	decodeDouble_2Int#,
-	
+    Double#,
+    (>##),
+    (>=##),
+    (==##),
+    (/=##),
+    (<##),
+    (<=##),
+    (+##),
+    (-##),
+    (*##),
+    (/##),
+    negateDouble#,
+    double2Int#,
+    double2Float#,
+    expDouble#,
+    logDouble#,
+    sqrtDouble#,
+    sinDouble#,
+    cosDouble#,
+    tanDouble#,
+    asinDouble#,
+    acosDouble#,
+    atanDouble#,
+    sinhDouble#,
+    coshDouble#,
+    tanhDouble#,
+    (**##),
+    decodeDouble_2Int#,
+    
 -- * Float#
 -- |Operations on single-precision (32-bit) floating-point numbers.
 
 
-	Float#,
-	gtFloat#,
-	geFloat#,
-	eqFloat#,
-	neFloat#,
-	ltFloat#,
-	leFloat#,
-	plusFloat#,
-	minusFloat#,
-	timesFloat#,
-	divideFloat#,
-	negateFloat#,
-	float2Int#,
-	expFloat#,
-	logFloat#,
-	sqrtFloat#,
-	sinFloat#,
-	cosFloat#,
-	tanFloat#,
-	asinFloat#,
-	acosFloat#,
-	atanFloat#,
-	sinhFloat#,
-	coshFloat#,
-	tanhFloat#,
-	powerFloat#,
-	float2Double#,
-	decodeFloat_Int#,
-	
+    Float#,
+    gtFloat#,
+    geFloat#,
+    eqFloat#,
+    neFloat#,
+    ltFloat#,
+    leFloat#,
+    plusFloat#,
+    minusFloat#,
+    timesFloat#,
+    divideFloat#,
+    negateFloat#,
+    float2Int#,
+    expFloat#,
+    logFloat#,
+    sqrtFloat#,
+    sinFloat#,
+    cosFloat#,
+    tanFloat#,
+    asinFloat#,
+    acosFloat#,
+    atanFloat#,
+    sinhFloat#,
+    coshFloat#,
+    tanhFloat#,
+    powerFloat#,
+    float2Double#,
+    decodeFloat_Int#,
+    
 -- * Arrays
 -- |Operations on @Array\#@.
 
 
-	Array#,
-	MutableArray#,
-	newArray#,
-	sameMutableArray#,
-	readArray#,
-	writeArray#,
-	sizeofArray#,
-	sizeofMutableArray#,
-	indexArray#,
-	unsafeFreezeArray#,
-	unsafeThawArray#,
-	copyArray#,
-	copyMutableArray#,
-	cloneArray#,
-	cloneMutableArray#,
-	freezeArray#,
-	thawArray#,
-	
+    Array#,
+    MutableArray#,
+    newArray#,
+    sameMutableArray#,
+    readArray#,
+    writeArray#,
+    sizeofArray#,
+    sizeofMutableArray#,
+    indexArray#,
+    unsafeFreezeArray#,
+    unsafeThawArray#,
+    copyArray#,
+    copyMutableArray#,
+    cloneArray#,
+    cloneMutableArray#,
+    freezeArray#,
+    thawArray#,
+    casArray#,
+    
 -- * Byte Arrays
 -- |Operations on @ByteArray\#@. A @ByteArray\#@ is a just a region of
 --          raw memory in the garbage-collected heap, which is not
@@ -280,446 +270,1081 @@ module GHC.Prim (
 --          being read or written.
 
 
-	ByteArray#,
-	MutableByteArray#,
-	newByteArray#,
-	newPinnedByteArray#,
-	newAlignedPinnedByteArray#,
-	byteArrayContents#,
-	sameMutableByteArray#,
-	unsafeFreezeByteArray#,
-	sizeofByteArray#,
-	sizeofMutableByteArray#,
-	indexCharArray#,
-	indexWideCharArray#,
-	indexIntArray#,
-	indexWordArray#,
-	indexAddrArray#,
-	indexFloatArray#,
-	indexDoubleArray#,
-	indexStablePtrArray#,
-	indexInt8Array#,
-	indexInt16Array#,
-	indexInt32Array#,
-	indexInt64Array#,
-	indexWord8Array#,
-	indexWord16Array#,
-	indexWord32Array#,
-	indexWord64Array#,
-	readCharArray#,
-	readWideCharArray#,
-	readIntArray#,
-	readWordArray#,
-	readAddrArray#,
-	readFloatArray#,
-	readDoubleArray#,
-	readStablePtrArray#,
-	readInt8Array#,
-	readInt16Array#,
-	readInt32Array#,
-	readInt64Array#,
-	readWord8Array#,
-	readWord16Array#,
-	readWord32Array#,
-	readWord64Array#,
-	writeCharArray#,
-	writeWideCharArray#,
-	writeIntArray#,
-	writeWordArray#,
-	writeAddrArray#,
-	writeFloatArray#,
-	writeDoubleArray#,
-	writeStablePtrArray#,
-	writeInt8Array#,
-	writeInt16Array#,
-	writeInt32Array#,
-	writeInt64Array#,
-	writeWord8Array#,
-	writeWord16Array#,
-	writeWord32Array#,
-	writeWord64Array#,
-	copyByteArray#,
-	copyMutableByteArray#,
-	setByteArray#,
-	
+    ByteArray#,
+    MutableByteArray#,
+    newByteArray#,
+    newPinnedByteArray#,
+    newAlignedPinnedByteArray#,
+    byteArrayContents#,
+    sameMutableByteArray#,
+    unsafeFreezeByteArray#,
+    sizeofByteArray#,
+    sizeofMutableByteArray#,
+    indexCharArray#,
+    indexWideCharArray#,
+    indexIntArray#,
+    indexWordArray#,
+    indexAddrArray#,
+    indexFloatArray#,
+    indexDoubleArray#,
+    indexStablePtrArray#,
+    indexInt8Array#,
+    indexInt16Array#,
+    indexInt32Array#,
+    indexInt64Array#,
+    indexWord8Array#,
+    indexWord16Array#,
+    indexWord32Array#,
+    indexWord64Array#,
+    readCharArray#,
+    readWideCharArray#,
+    readIntArray#,
+    readWordArray#,
+    readAddrArray#,
+    readFloatArray#,
+    readDoubleArray#,
+    readStablePtrArray#,
+    readInt8Array#,
+    readInt16Array#,
+    readInt32Array#,
+    readInt64Array#,
+    readWord8Array#,
+    readWord16Array#,
+    readWord32Array#,
+    readWord64Array#,
+    writeCharArray#,
+    writeWideCharArray#,
+    writeIntArray#,
+    writeWordArray#,
+    writeAddrArray#,
+    writeFloatArray#,
+    writeDoubleArray#,
+    writeStablePtrArray#,
+    writeInt8Array#,
+    writeInt16Array#,
+    writeInt32Array#,
+    writeInt64Array#,
+    writeWord8Array#,
+    writeWord16Array#,
+    writeWord32Array#,
+    writeWord64Array#,
+    copyByteArray#,
+    copyMutableByteArray#,
+    copyByteArrayToAddr#,
+    copyMutableByteArrayToAddr#,
+    copyAddrToByteArray#,
+    setByteArray#,
+    casIntArray#,
+    fetchAddIntArray#,
+    
 -- * Arrays of arrays
 -- |Operations on @ArrayArray\#@. An @ArrayArray\#@ contains references to {\em unpointed}
--- 	 arrays, such as @ByteArray\#s@. Hence, it is not parameterised by the element types,
--- 	 just like a @ByteArray\#@, but it needs to be scanned during GC, just like an @Array#@.
--- 	 We represent an @ArrayArray\#@ exactly as a @Array\#@, but provide element-type-specific
--- 	 indexing, reading, and writing.
+--   arrays, such as @ByteArray\#s@. Hence, it is not parameterised by the element types,
+--   just like a @ByteArray\#@, but it needs to be scanned during GC, just like an @Array#@.
+--   We represent an @ArrayArray\#@ exactly as a @Array\#@, but provide element-type-specific
+--   indexing, reading, and writing.
 
 
-	ArrayArray#,
-	MutableArrayArray#,
-	newArrayArray#,
-	sameMutableArrayArray#,
-	unsafeFreezeArrayArray#,
-	sizeofArrayArray#,
-	sizeofMutableArrayArray#,
-	indexByteArrayArray#,
-	indexArrayArrayArray#,
-	readByteArrayArray#,
-	readMutableByteArrayArray#,
-	readArrayArrayArray#,
-	readMutableArrayArrayArray#,
-	writeByteArrayArray#,
-	writeMutableByteArrayArray#,
-	writeArrayArrayArray#,
-	writeMutableArrayArrayArray#,
-	copyArrayArray#,
-	copyMutableArrayArray#,
-	
+    ArrayArray#,
+    MutableArrayArray#,
+    newArrayArray#,
+    sameMutableArrayArray#,
+    unsafeFreezeArrayArray#,
+    sizeofArrayArray#,
+    sizeofMutableArrayArray#,
+    indexByteArrayArray#,
+    indexArrayArrayArray#,
+    readByteArrayArray#,
+    readMutableByteArrayArray#,
+    readArrayArrayArray#,
+    readMutableArrayArrayArray#,
+    writeByteArrayArray#,
+    writeMutableByteArrayArray#,
+    writeArrayArrayArray#,
+    writeMutableArrayArrayArray#,
+    copyArrayArray#,
+    copyMutableArrayArray#,
+    
 -- * Addr#
 -- |
 
 
-	Addr#,
-	nullAddr#,
-	plusAddr#,
-	minusAddr#,
-	remAddr#,
-	addr2Int#,
-	int2Addr#,
-	gtAddr#,
-	geAddr#,
-	eqAddr#,
-	neAddr#,
-	ltAddr#,
-	leAddr#,
-	indexCharOffAddr#,
-	indexWideCharOffAddr#,
-	indexIntOffAddr#,
-	indexWordOffAddr#,
-	indexAddrOffAddr#,
-	indexFloatOffAddr#,
-	indexDoubleOffAddr#,
-	indexStablePtrOffAddr#,
-	indexInt8OffAddr#,
-	indexInt16OffAddr#,
-	indexInt32OffAddr#,
-	indexInt64OffAddr#,
-	indexWord8OffAddr#,
-	indexWord16OffAddr#,
-	indexWord32OffAddr#,
-	indexWord64OffAddr#,
-	readCharOffAddr#,
-	readWideCharOffAddr#,
-	readIntOffAddr#,
-	readWordOffAddr#,
-	readAddrOffAddr#,
-	readFloatOffAddr#,
-	readDoubleOffAddr#,
-	readStablePtrOffAddr#,
-	readInt8OffAddr#,
-	readInt16OffAddr#,
-	readInt32OffAddr#,
-	readInt64OffAddr#,
-	readWord8OffAddr#,
-	readWord16OffAddr#,
-	readWord32OffAddr#,
-	readWord64OffAddr#,
-	writeCharOffAddr#,
-	writeWideCharOffAddr#,
-	writeIntOffAddr#,
-	writeWordOffAddr#,
-	writeAddrOffAddr#,
-	writeFloatOffAddr#,
-	writeDoubleOffAddr#,
-	writeStablePtrOffAddr#,
-	writeInt8OffAddr#,
-	writeInt16OffAddr#,
-	writeInt32OffAddr#,
-	writeInt64OffAddr#,
-	writeWord8OffAddr#,
-	writeWord16OffAddr#,
-	writeWord32OffAddr#,
-	writeWord64OffAddr#,
-	
+    Addr#,
+    nullAddr#,
+    plusAddr#,
+    minusAddr#,
+    remAddr#,
+    addr2Int#,
+    int2Addr#,
+    gtAddr#,
+    geAddr#,
+    eqAddr#,
+    neAddr#,
+    ltAddr#,
+    leAddr#,
+    indexCharOffAddr#,
+    indexWideCharOffAddr#,
+    indexIntOffAddr#,
+    indexWordOffAddr#,
+    indexAddrOffAddr#,
+    indexFloatOffAddr#,
+    indexDoubleOffAddr#,
+    indexStablePtrOffAddr#,
+    indexInt8OffAddr#,
+    indexInt16OffAddr#,
+    indexInt32OffAddr#,
+    indexInt64OffAddr#,
+    indexWord8OffAddr#,
+    indexWord16OffAddr#,
+    indexWord32OffAddr#,
+    indexWord64OffAddr#,
+    readCharOffAddr#,
+    readWideCharOffAddr#,
+    readIntOffAddr#,
+    readWordOffAddr#,
+    readAddrOffAddr#,
+    readFloatOffAddr#,
+    readDoubleOffAddr#,
+    readStablePtrOffAddr#,
+    readInt8OffAddr#,
+    readInt16OffAddr#,
+    readInt32OffAddr#,
+    readInt64OffAddr#,
+    readWord8OffAddr#,
+    readWord16OffAddr#,
+    readWord32OffAddr#,
+    readWord64OffAddr#,
+    writeCharOffAddr#,
+    writeWideCharOffAddr#,
+    writeIntOffAddr#,
+    writeWordOffAddr#,
+    writeAddrOffAddr#,
+    writeFloatOffAddr#,
+    writeDoubleOffAddr#,
+    writeStablePtrOffAddr#,
+    writeInt8OffAddr#,
+    writeInt16OffAddr#,
+    writeInt32OffAddr#,
+    writeInt64OffAddr#,
+    writeWord8OffAddr#,
+    writeWord16OffAddr#,
+    writeWord32OffAddr#,
+    writeWord64OffAddr#,
+    
 -- * Mutable variables
 -- |Operations on MutVar\#s.
 
 
-	MutVar#,
-	newMutVar#,
-	readMutVar#,
-	writeMutVar#,
-	sameMutVar#,
-	atomicModifyMutVar#,
-	casMutVar#,
-	
+    MutVar#,
+    newMutVar#,
+    readMutVar#,
+    writeMutVar#,
+    sameMutVar#,
+    atomicModifyMutVar#,
+    casMutVar#,
+    
 -- * Exceptions
 -- |
 
 
-	catch#,
-	raise#,
-	raiseIO#,
-	maskAsyncExceptions#,
-	maskUninterruptible#,
-	unmaskAsyncExceptions#,
-	getMaskingState#,
-	
+    catch#,
+    raise#,
+    raiseIO#,
+    maskAsyncExceptions#,
+    maskUninterruptible#,
+    unmaskAsyncExceptions#,
+    getMaskingState#,
+    
 -- * STM-accessible Mutable Variables
 -- |
 
 
-	TVar#,
-	atomically#,
-	retry#,
-	catchRetry#,
-	catchSTM#,
-	check#,
-	newTVar#,
-	readTVar#,
-	readTVarIO#,
-	writeTVar#,
-	sameTVar#,
-	
+    TVar#,
+    atomically#,
+    retry#,
+    catchRetry#,
+    catchSTM#,
+    check#,
+    newTVar#,
+    readTVar#,
+    readTVarIO#,
+    writeTVar#,
+    sameTVar#,
+    
 -- * Synchronized Mutable Variables
 -- |Operations on @MVar\#@s. 
 
 
-	MVar#,
-	newMVar#,
-	takeMVar#,
-	tryTakeMVar#,
-	putMVar#,
-	tryPutMVar#,
-	sameMVar#,
-	isEmptyMVar#,
-	
+    MVar#,
+    newMVar#,
+    takeMVar#,
+    tryTakeMVar#,
+    putMVar#,
+    tryPutMVar#,
+    readMVar#,
+    tryReadMVar#,
+    sameMVar#,
+    isEmptyMVar#,
+    
 -- * Delay\/wait operations
 -- |
 
 
-	delay#,
-	waitRead#,
-	waitWrite#,
-	
+    delay#,
+    waitRead#,
+    waitWrite#,
+    
 -- * Concurrency primitives
 -- |
 
 
-	State#,
-	RealWorld,
-	ThreadId#,
-	fork#,
-	forkOn#,
-	killThread#,
-	yield#,
-	myThreadId#,
-	labelThread#,
-	isCurrentThreadBound#,
-	noDuplicate#,
-	threadStatus#,
-	
+    State#,
+    RealWorld,
+    ThreadId#,
+    fork#,
+    forkOn#,
+    killThread#,
+    yield#,
+    myThreadId#,
+    labelThread#,
+    isCurrentThreadBound#,
+    noDuplicate#,
+    threadStatus#,
+    
 -- * Weak pointers
 -- |
 
 
-	Weak#,
-	mkWeak#,
-	mkWeakNoFinalizer#,
-	mkWeakForeignEnv#,
-	deRefWeak#,
-	finalizeWeak#,
-	touch#,
-	
+    Weak#,
+    mkWeak#,
+    mkWeakNoFinalizer#,
+    addCFinalizerToWeak#,
+    deRefWeak#,
+    finalizeWeak#,
+    touch#,
+    
 -- * Stable pointers and names
 -- |
 
 
-	StablePtr#,
-	StableName#,
-	makeStablePtr#,
-	deRefStablePtr#,
-	eqStablePtr#,
-	makeStableName#,
-	eqStableName#,
-	stableNameToInt#,
-	
+    StablePtr#,
+    StableName#,
+    makeStablePtr#,
+    deRefStablePtr#,
+    eqStablePtr#,
+    makeStableName#,
+    eqStableName#,
+    stableNameToInt#,
+    
 -- * Unsafe pointer equality
 -- |
 
 
-	reallyUnsafePtrEquality#,
-	
+    reallyUnsafePtrEquality#,
+    
 -- * Parallelism
 -- |
 
 
-	par#,
-	spark#,
-	seq#,
-	getSpark#,
-	numSparks#,
-	parGlobal#,
-	parLocal#,
-	parAt#,
-	parAtAbs#,
-	parAtRel#,
-	parAtForNow#,
-	
+    par#,
+    spark#,
+    seq#,
+    getSpark#,
+    numSparks#,
+    parGlobal#,
+    parLocal#,
+    parAt#,
+    parAtAbs#,
+    parAtRel#,
+    parAtForNow#,
+    
 -- * Tag to enum stuff
 -- |Convert back and forth between values of enumerated types
--- 	and small integers.
+--  and small integers.
 
 
-	dataToTag#,
-	tagToEnum#,
-	
+    dataToTag#,
+    tagToEnum#,
+    
 -- * Bytecode operations
 -- |Support for the bytecode interpreter and linker.
 
 
-	BCO#,
-	addrToAny#,
-	mkApUpd0#,
-	newBCO#,
-	unpackClosure#,
-	getApStackVal#,
-	
+    BCO#,
+    addrToAny#,
+    mkApUpd0#,
+    newBCO#,
+    unpackClosure#,
+    getApStackVal#,
+    
 -- * Misc
 -- |These aren\'t nearly as wired in as Etc...
 
 
-	getCCSOf#,
-	getCurrentCCS#,
-	
+    getCCSOf#,
+    getCurrentCCS#,
+    
 -- * Etc
 -- |Miscellaneous built-ins
 
 
-	seq,
-	Any,
-	AnyK,
-	unsafeCoerce#,
-	traceEvent#,
-	traceMarker#,
-	
--- * Float SIMD Vectors
--- |Operations on SIMD vectors of 4 single-precision (32-bit)
---          floating-point numbers.
+    Proxy#,
+    proxy#,
+    seq,
+    Any,
+    AnyK,
+    unsafeCoerce#,
+    traceEvent#,
+    traceMarker#,
+    
+-- * Safe coercions
+-- |
 
 
-	FloatX4#,
-	floatToFloatX4#,
-	packFloatX4#,
-	unpackFloatX4#,
-	insertFloatX4#,
-	plusFloatX4#,
-	minusFloatX4#,
-	timesFloatX4#,
-	divideFloatX4#,
-	negateFloatX4#,
-	indexFloatX4Array#,
-	readFloatX4Array#,
-	writeFloatX4Array#,
-	indexFloatX4OffAddr#,
-	readFloatX4OffAddr#,
-	writeFloatX4OffAddr#,
-	indexFloatArrayAsFloatX4#,
-	readFloatArrayAsFloatX4#,
-	writeFloatArrayAsFloatX4#,
-	indexFloatOffAddrAsFloatX4#,
-	readFloatOffAddrAsFloatX4#,
-	writeFloatOffAddrAsFloatX4#,
-	
--- * Double SIMD Vectors
--- |Operations on SIMD vectors of 2 double-precision (64-bit)
---          floating-point numbers.
+    coerce,
+    Coercible,
+    
+-- * SIMD Vectors
+-- |Operations on SIMD vectors.
 
 
-	DoubleX2#,
-	doubleToDoubleX2#,
-	insertDoubleX2#,
-	packDoubleX2#,
-	unpackDoubleX2#,
-	plusDoubleX2#,
-	minusDoubleX2#,
-	timesDoubleX2#,
-	divideDoubleX2#,
-	negateDoubleX2#,
-	indexDoubleX2Array#,
-	readDoubleX2Array#,
-	writeDoubleX2Array#,
-	indexDoubleX2OffAddr#,
-	readDoubleX2OffAddr#,
-	writeDoubleX2OffAddr#,
-	indexDoubleArrayAsDoubleX2#,
-	readDoubleArrayAsDoubleX2#,
-	writeDoubleArrayAsDoubleX2#,
-	indexDoubleOffAddrAsDoubleX2#,
-	readDoubleOffAddrAsDoubleX2#,
-	writeDoubleOffAddrAsDoubleX2#,
-	
--- * Int32 SIMD Vectors
--- |Operations on SIMD vectors of 4 32-bit signed integers.
-
-
-	Int32X4#,
-	int32ToInt32X4#,
-	insertInt32X4#,
-	packInt32X4#,
-	unpackInt32X4#,
-	plusInt32X4#,
-	minusInt32X4#,
-	timesInt32X4#,
-	quotInt32X4#,
-	remInt32X4#,
-	negateInt32X4#,
-	indexInt32X4Array#,
-	readInt32X4Array#,
-	writeInt32X4Array#,
-	indexInt32X4OffAddr#,
-	readInt32X4OffAddr#,
-	writeInt32X4OffAddr#,
-	indexInt32ArrayAsInt32X4#,
-	readInt32ArrayAsInt32X4#,
-	writeInt32ArrayAsInt32X4#,
-	indexInt32OffAddrAsInt32X4#,
-	readInt32OffAddrAsInt32X4#,
-	writeInt32OffAddrAsInt32X4#,
-	
--- * Int64 SIMD Vectors
--- |Operations on SIMD vectors of 2 64-bit signed integers.
-
-
-	Int64X2#,
-	int64ToInt64X2#,
-	insertInt64X2#,
-	packInt64X2#,
-	unpackInt64X2#,
-	plusInt64X2#,
-	minusInt64X2#,
-	timesInt64X2#,
-	quotInt64X2#,
-	remInt64X2#,
-	negateInt64X2#,
-	indexInt64X2Array#,
-	readInt64X2Array#,
-	writeInt64X2Array#,
-	indexInt64X2OffAddr#,
-	readInt64X2OffAddr#,
-	writeInt64X2OffAddr#,
-	indexInt64ArrayAsInt64X2#,
-	readInt64ArrayAsInt64X2#,
-	writeInt64ArrayAsInt64X2#,
-	indexInt64OffAddrAsInt64X2#,
-	readInt64OffAddrAsInt64X2#,
-	writeInt64OffAddrAsInt64X2#,
-	
+    Int8X16#,
+    Int16X8#,
+    Int32X4#,
+    Int64X2#,
+    Int8X32#,
+    Int16X16#,
+    Int32X8#,
+    Int64X4#,
+    Int8X64#,
+    Int16X32#,
+    Int32X16#,
+    Int64X8#,
+    Word8X16#,
+    Word16X8#,
+    Word32X4#,
+    Word64X2#,
+    Word8X32#,
+    Word16X16#,
+    Word32X8#,
+    Word64X4#,
+    Word8X64#,
+    Word16X32#,
+    Word32X16#,
+    Word64X8#,
+    FloatX4#,
+    DoubleX2#,
+    FloatX8#,
+    DoubleX4#,
+    FloatX16#,
+    DoubleX8#,
+    broadcastInt8X16#,
+    broadcastInt16X8#,
+    broadcastInt32X4#,
+    broadcastInt64X2#,
+    broadcastInt8X32#,
+    broadcastInt16X16#,
+    broadcastInt32X8#,
+    broadcastInt64X4#,
+    broadcastInt8X64#,
+    broadcastInt16X32#,
+    broadcastInt32X16#,
+    broadcastInt64X8#,
+    broadcastWord8X16#,
+    broadcastWord16X8#,
+    broadcastWord32X4#,
+    broadcastWord64X2#,
+    broadcastWord8X32#,
+    broadcastWord16X16#,
+    broadcastWord32X8#,
+    broadcastWord64X4#,
+    broadcastWord8X64#,
+    broadcastWord16X32#,
+    broadcastWord32X16#,
+    broadcastWord64X8#,
+    broadcastFloatX4#,
+    broadcastDoubleX2#,
+    broadcastFloatX8#,
+    broadcastDoubleX4#,
+    broadcastFloatX16#,
+    broadcastDoubleX8#,
+    packInt8X16#,
+    packInt16X8#,
+    packInt32X4#,
+    packInt64X2#,
+    packInt8X32#,
+    packInt16X16#,
+    packInt32X8#,
+    packInt64X4#,
+    packInt8X64#,
+    packInt16X32#,
+    packInt32X16#,
+    packInt64X8#,
+    packWord8X16#,
+    packWord16X8#,
+    packWord32X4#,
+    packWord64X2#,
+    packWord8X32#,
+    packWord16X16#,
+    packWord32X8#,
+    packWord64X4#,
+    packWord8X64#,
+    packWord16X32#,
+    packWord32X16#,
+    packWord64X8#,
+    packFloatX4#,
+    packDoubleX2#,
+    packFloatX8#,
+    packDoubleX4#,
+    packFloatX16#,
+    packDoubleX8#,
+    unpackInt8X16#,
+    unpackInt16X8#,
+    unpackInt32X4#,
+    unpackInt64X2#,
+    unpackInt8X32#,
+    unpackInt16X16#,
+    unpackInt32X8#,
+    unpackInt64X4#,
+    unpackInt8X64#,
+    unpackInt16X32#,
+    unpackInt32X16#,
+    unpackInt64X8#,
+    unpackWord8X16#,
+    unpackWord16X8#,
+    unpackWord32X4#,
+    unpackWord64X2#,
+    unpackWord8X32#,
+    unpackWord16X16#,
+    unpackWord32X8#,
+    unpackWord64X4#,
+    unpackWord8X64#,
+    unpackWord16X32#,
+    unpackWord32X16#,
+    unpackWord64X8#,
+    unpackFloatX4#,
+    unpackDoubleX2#,
+    unpackFloatX8#,
+    unpackDoubleX4#,
+    unpackFloatX16#,
+    unpackDoubleX8#,
+    insertInt8X16#,
+    insertInt16X8#,
+    insertInt32X4#,
+    insertInt64X2#,
+    insertInt8X32#,
+    insertInt16X16#,
+    insertInt32X8#,
+    insertInt64X4#,
+    insertInt8X64#,
+    insertInt16X32#,
+    insertInt32X16#,
+    insertInt64X8#,
+    insertWord8X16#,
+    insertWord16X8#,
+    insertWord32X4#,
+    insertWord64X2#,
+    insertWord8X32#,
+    insertWord16X16#,
+    insertWord32X8#,
+    insertWord64X4#,
+    insertWord8X64#,
+    insertWord16X32#,
+    insertWord32X16#,
+    insertWord64X8#,
+    insertFloatX4#,
+    insertDoubleX2#,
+    insertFloatX8#,
+    insertDoubleX4#,
+    insertFloatX16#,
+    insertDoubleX8#,
+    plusInt8X16#,
+    plusInt16X8#,
+    plusInt32X4#,
+    plusInt64X2#,
+    plusInt8X32#,
+    plusInt16X16#,
+    plusInt32X8#,
+    plusInt64X4#,
+    plusInt8X64#,
+    plusInt16X32#,
+    plusInt32X16#,
+    plusInt64X8#,
+    plusWord8X16#,
+    plusWord16X8#,
+    plusWord32X4#,
+    plusWord64X2#,
+    plusWord8X32#,
+    plusWord16X16#,
+    plusWord32X8#,
+    plusWord64X4#,
+    plusWord8X64#,
+    plusWord16X32#,
+    plusWord32X16#,
+    plusWord64X8#,
+    plusFloatX4#,
+    plusDoubleX2#,
+    plusFloatX8#,
+    plusDoubleX4#,
+    plusFloatX16#,
+    plusDoubleX8#,
+    minusInt8X16#,
+    minusInt16X8#,
+    minusInt32X4#,
+    minusInt64X2#,
+    minusInt8X32#,
+    minusInt16X16#,
+    minusInt32X8#,
+    minusInt64X4#,
+    minusInt8X64#,
+    minusInt16X32#,
+    minusInt32X16#,
+    minusInt64X8#,
+    minusWord8X16#,
+    minusWord16X8#,
+    minusWord32X4#,
+    minusWord64X2#,
+    minusWord8X32#,
+    minusWord16X16#,
+    minusWord32X8#,
+    minusWord64X4#,
+    minusWord8X64#,
+    minusWord16X32#,
+    minusWord32X16#,
+    minusWord64X8#,
+    minusFloatX4#,
+    minusDoubleX2#,
+    minusFloatX8#,
+    minusDoubleX4#,
+    minusFloatX16#,
+    minusDoubleX8#,
+    timesInt8X16#,
+    timesInt16X8#,
+    timesInt32X4#,
+    timesInt64X2#,
+    timesInt8X32#,
+    timesInt16X16#,
+    timesInt32X8#,
+    timesInt64X4#,
+    timesInt8X64#,
+    timesInt16X32#,
+    timesInt32X16#,
+    timesInt64X8#,
+    timesWord8X16#,
+    timesWord16X8#,
+    timesWord32X4#,
+    timesWord64X2#,
+    timesWord8X32#,
+    timesWord16X16#,
+    timesWord32X8#,
+    timesWord64X4#,
+    timesWord8X64#,
+    timesWord16X32#,
+    timesWord32X16#,
+    timesWord64X8#,
+    timesFloatX4#,
+    timesDoubleX2#,
+    timesFloatX8#,
+    timesDoubleX4#,
+    timesFloatX16#,
+    timesDoubleX8#,
+    divideFloatX4#,
+    divideDoubleX2#,
+    divideFloatX8#,
+    divideDoubleX4#,
+    divideFloatX16#,
+    divideDoubleX8#,
+    quotInt8X16#,
+    quotInt16X8#,
+    quotInt32X4#,
+    quotInt64X2#,
+    quotInt8X32#,
+    quotInt16X16#,
+    quotInt32X8#,
+    quotInt64X4#,
+    quotInt8X64#,
+    quotInt16X32#,
+    quotInt32X16#,
+    quotInt64X8#,
+    quotWord8X16#,
+    quotWord16X8#,
+    quotWord32X4#,
+    quotWord64X2#,
+    quotWord8X32#,
+    quotWord16X16#,
+    quotWord32X8#,
+    quotWord64X4#,
+    quotWord8X64#,
+    quotWord16X32#,
+    quotWord32X16#,
+    quotWord64X8#,
+    remInt8X16#,
+    remInt16X8#,
+    remInt32X4#,
+    remInt64X2#,
+    remInt8X32#,
+    remInt16X16#,
+    remInt32X8#,
+    remInt64X4#,
+    remInt8X64#,
+    remInt16X32#,
+    remInt32X16#,
+    remInt64X8#,
+    remWord8X16#,
+    remWord16X8#,
+    remWord32X4#,
+    remWord64X2#,
+    remWord8X32#,
+    remWord16X16#,
+    remWord32X8#,
+    remWord64X4#,
+    remWord8X64#,
+    remWord16X32#,
+    remWord32X16#,
+    remWord64X8#,
+    negateInt8X16#,
+    negateInt16X8#,
+    negateInt32X4#,
+    negateInt64X2#,
+    negateInt8X32#,
+    negateInt16X16#,
+    negateInt32X8#,
+    negateInt64X4#,
+    negateInt8X64#,
+    negateInt16X32#,
+    negateInt32X16#,
+    negateInt64X8#,
+    negateFloatX4#,
+    negateDoubleX2#,
+    negateFloatX8#,
+    negateDoubleX4#,
+    negateFloatX16#,
+    negateDoubleX8#,
+    indexInt8X16Array#,
+    indexInt16X8Array#,
+    indexInt32X4Array#,
+    indexInt64X2Array#,
+    indexInt8X32Array#,
+    indexInt16X16Array#,
+    indexInt32X8Array#,
+    indexInt64X4Array#,
+    indexInt8X64Array#,
+    indexInt16X32Array#,
+    indexInt32X16Array#,
+    indexInt64X8Array#,
+    indexWord8X16Array#,
+    indexWord16X8Array#,
+    indexWord32X4Array#,
+    indexWord64X2Array#,
+    indexWord8X32Array#,
+    indexWord16X16Array#,
+    indexWord32X8Array#,
+    indexWord64X4Array#,
+    indexWord8X64Array#,
+    indexWord16X32Array#,
+    indexWord32X16Array#,
+    indexWord64X8Array#,
+    indexFloatX4Array#,
+    indexDoubleX2Array#,
+    indexFloatX8Array#,
+    indexDoubleX4Array#,
+    indexFloatX16Array#,
+    indexDoubleX8Array#,
+    readInt8X16Array#,
+    readInt16X8Array#,
+    readInt32X4Array#,
+    readInt64X2Array#,
+    readInt8X32Array#,
+    readInt16X16Array#,
+    readInt32X8Array#,
+    readInt64X4Array#,
+    readInt8X64Array#,
+    readInt16X32Array#,
+    readInt32X16Array#,
+    readInt64X8Array#,
+    readWord8X16Array#,
+    readWord16X8Array#,
+    readWord32X4Array#,
+    readWord64X2Array#,
+    readWord8X32Array#,
+    readWord16X16Array#,
+    readWord32X8Array#,
+    readWord64X4Array#,
+    readWord8X64Array#,
+    readWord16X32Array#,
+    readWord32X16Array#,
+    readWord64X8Array#,
+    readFloatX4Array#,
+    readDoubleX2Array#,
+    readFloatX8Array#,
+    readDoubleX4Array#,
+    readFloatX16Array#,
+    readDoubleX8Array#,
+    writeInt8X16Array#,
+    writeInt16X8Array#,
+    writeInt32X4Array#,
+    writeInt64X2Array#,
+    writeInt8X32Array#,
+    writeInt16X16Array#,
+    writeInt32X8Array#,
+    writeInt64X4Array#,
+    writeInt8X64Array#,
+    writeInt16X32Array#,
+    writeInt32X16Array#,
+    writeInt64X8Array#,
+    writeWord8X16Array#,
+    writeWord16X8Array#,
+    writeWord32X4Array#,
+    writeWord64X2Array#,
+    writeWord8X32Array#,
+    writeWord16X16Array#,
+    writeWord32X8Array#,
+    writeWord64X4Array#,
+    writeWord8X64Array#,
+    writeWord16X32Array#,
+    writeWord32X16Array#,
+    writeWord64X8Array#,
+    writeFloatX4Array#,
+    writeDoubleX2Array#,
+    writeFloatX8Array#,
+    writeDoubleX4Array#,
+    writeFloatX16Array#,
+    writeDoubleX8Array#,
+    indexInt8X16OffAddr#,
+    indexInt16X8OffAddr#,
+    indexInt32X4OffAddr#,
+    indexInt64X2OffAddr#,
+    indexInt8X32OffAddr#,
+    indexInt16X16OffAddr#,
+    indexInt32X8OffAddr#,
+    indexInt64X4OffAddr#,
+    indexInt8X64OffAddr#,
+    indexInt16X32OffAddr#,
+    indexInt32X16OffAddr#,
+    indexInt64X8OffAddr#,
+    indexWord8X16OffAddr#,
+    indexWord16X8OffAddr#,
+    indexWord32X4OffAddr#,
+    indexWord64X2OffAddr#,
+    indexWord8X32OffAddr#,
+    indexWord16X16OffAddr#,
+    indexWord32X8OffAddr#,
+    indexWord64X4OffAddr#,
+    indexWord8X64OffAddr#,
+    indexWord16X32OffAddr#,
+    indexWord32X16OffAddr#,
+    indexWord64X8OffAddr#,
+    indexFloatX4OffAddr#,
+    indexDoubleX2OffAddr#,
+    indexFloatX8OffAddr#,
+    indexDoubleX4OffAddr#,
+    indexFloatX16OffAddr#,
+    indexDoubleX8OffAddr#,
+    readInt8X16OffAddr#,
+    readInt16X8OffAddr#,
+    readInt32X4OffAddr#,
+    readInt64X2OffAddr#,
+    readInt8X32OffAddr#,
+    readInt16X16OffAddr#,
+    readInt32X8OffAddr#,
+    readInt64X4OffAddr#,
+    readInt8X64OffAddr#,
+    readInt16X32OffAddr#,
+    readInt32X16OffAddr#,
+    readInt64X8OffAddr#,
+    readWord8X16OffAddr#,
+    readWord16X8OffAddr#,
+    readWord32X4OffAddr#,
+    readWord64X2OffAddr#,
+    readWord8X32OffAddr#,
+    readWord16X16OffAddr#,
+    readWord32X8OffAddr#,
+    readWord64X4OffAddr#,
+    readWord8X64OffAddr#,
+    readWord16X32OffAddr#,
+    readWord32X16OffAddr#,
+    readWord64X8OffAddr#,
+    readFloatX4OffAddr#,
+    readDoubleX2OffAddr#,
+    readFloatX8OffAddr#,
+    readDoubleX4OffAddr#,
+    readFloatX16OffAddr#,
+    readDoubleX8OffAddr#,
+    writeInt8X16OffAddr#,
+    writeInt16X8OffAddr#,
+    writeInt32X4OffAddr#,
+    writeInt64X2OffAddr#,
+    writeInt8X32OffAddr#,
+    writeInt16X16OffAddr#,
+    writeInt32X8OffAddr#,
+    writeInt64X4OffAddr#,
+    writeInt8X64OffAddr#,
+    writeInt16X32OffAddr#,
+    writeInt32X16OffAddr#,
+    writeInt64X8OffAddr#,
+    writeWord8X16OffAddr#,
+    writeWord16X8OffAddr#,
+    writeWord32X4OffAddr#,
+    writeWord64X2OffAddr#,
+    writeWord8X32OffAddr#,
+    writeWord16X16OffAddr#,
+    writeWord32X8OffAddr#,
+    writeWord64X4OffAddr#,
+    writeWord8X64OffAddr#,
+    writeWord16X32OffAddr#,
+    writeWord32X16OffAddr#,
+    writeWord64X8OffAddr#,
+    writeFloatX4OffAddr#,
+    writeDoubleX2OffAddr#,
+    writeFloatX8OffAddr#,
+    writeDoubleX4OffAddr#,
+    writeFloatX16OffAddr#,
+    writeDoubleX8OffAddr#,
+    indexInt8ArrayAsInt8X16#,
+    indexInt16ArrayAsInt16X8#,
+    indexInt32ArrayAsInt32X4#,
+    indexInt64ArrayAsInt64X2#,
+    indexInt8ArrayAsInt8X32#,
+    indexInt16ArrayAsInt16X16#,
+    indexInt32ArrayAsInt32X8#,
+    indexInt64ArrayAsInt64X4#,
+    indexInt8ArrayAsInt8X64#,
+    indexInt16ArrayAsInt16X32#,
+    indexInt32ArrayAsInt32X16#,
+    indexInt64ArrayAsInt64X8#,
+    indexWord8ArrayAsWord8X16#,
+    indexWord16ArrayAsWord16X8#,
+    indexWord32ArrayAsWord32X4#,
+    indexWord64ArrayAsWord64X2#,
+    indexWord8ArrayAsWord8X32#,
+    indexWord16ArrayAsWord16X16#,
+    indexWord32ArrayAsWord32X8#,
+    indexWord64ArrayAsWord64X4#,
+    indexWord8ArrayAsWord8X64#,
+    indexWord16ArrayAsWord16X32#,
+    indexWord32ArrayAsWord32X16#,
+    indexWord64ArrayAsWord64X8#,
+    indexFloatArrayAsFloatX4#,
+    indexDoubleArrayAsDoubleX2#,
+    indexFloatArrayAsFloatX8#,
+    indexDoubleArrayAsDoubleX4#,
+    indexFloatArrayAsFloatX16#,
+    indexDoubleArrayAsDoubleX8#,
+    readInt8ArrayAsInt8X16#,
+    readInt16ArrayAsInt16X8#,
+    readInt32ArrayAsInt32X4#,
+    readInt64ArrayAsInt64X2#,
+    readInt8ArrayAsInt8X32#,
+    readInt16ArrayAsInt16X16#,
+    readInt32ArrayAsInt32X8#,
+    readInt64ArrayAsInt64X4#,
+    readInt8ArrayAsInt8X64#,
+    readInt16ArrayAsInt16X32#,
+    readInt32ArrayAsInt32X16#,
+    readInt64ArrayAsInt64X8#,
+    readWord8ArrayAsWord8X16#,
+    readWord16ArrayAsWord16X8#,
+    readWord32ArrayAsWord32X4#,
+    readWord64ArrayAsWord64X2#,
+    readWord8ArrayAsWord8X32#,
+    readWord16ArrayAsWord16X16#,
+    readWord32ArrayAsWord32X8#,
+    readWord64ArrayAsWord64X4#,
+    readWord8ArrayAsWord8X64#,
+    readWord16ArrayAsWord16X32#,
+    readWord32ArrayAsWord32X16#,
+    readWord64ArrayAsWord64X8#,
+    readFloatArrayAsFloatX4#,
+    readDoubleArrayAsDoubleX2#,
+    readFloatArrayAsFloatX8#,
+    readDoubleArrayAsDoubleX4#,
+    readFloatArrayAsFloatX16#,
+    readDoubleArrayAsDoubleX8#,
+    writeInt8ArrayAsInt8X16#,
+    writeInt16ArrayAsInt16X8#,
+    writeInt32ArrayAsInt32X4#,
+    writeInt64ArrayAsInt64X2#,
+    writeInt8ArrayAsInt8X32#,
+    writeInt16ArrayAsInt16X16#,
+    writeInt32ArrayAsInt32X8#,
+    writeInt64ArrayAsInt64X4#,
+    writeInt8ArrayAsInt8X64#,
+    writeInt16ArrayAsInt16X32#,
+    writeInt32ArrayAsInt32X16#,
+    writeInt64ArrayAsInt64X8#,
+    writeWord8ArrayAsWord8X16#,
+    writeWord16ArrayAsWord16X8#,
+    writeWord32ArrayAsWord32X4#,
+    writeWord64ArrayAsWord64X2#,
+    writeWord8ArrayAsWord8X32#,
+    writeWord16ArrayAsWord16X16#,
+    writeWord32ArrayAsWord32X8#,
+    writeWord64ArrayAsWord64X4#,
+    writeWord8ArrayAsWord8X64#,
+    writeWord16ArrayAsWord16X32#,
+    writeWord32ArrayAsWord32X16#,
+    writeWord64ArrayAsWord64X8#,
+    writeFloatArrayAsFloatX4#,
+    writeDoubleArrayAsDoubleX2#,
+    writeFloatArrayAsFloatX8#,
+    writeDoubleArrayAsDoubleX4#,
+    writeFloatArrayAsFloatX16#,
+    writeDoubleArrayAsDoubleX8#,
+    indexInt8OffAddrAsInt8X16#,
+    indexInt16OffAddrAsInt16X8#,
+    indexInt32OffAddrAsInt32X4#,
+    indexInt64OffAddrAsInt64X2#,
+    indexInt8OffAddrAsInt8X32#,
+    indexInt16OffAddrAsInt16X16#,
+    indexInt32OffAddrAsInt32X8#,
+    indexInt64OffAddrAsInt64X4#,
+    indexInt8OffAddrAsInt8X64#,
+    indexInt16OffAddrAsInt16X32#,
+    indexInt32OffAddrAsInt32X16#,
+    indexInt64OffAddrAsInt64X8#,
+    indexWord8OffAddrAsWord8X16#,
+    indexWord16OffAddrAsWord16X8#,
+    indexWord32OffAddrAsWord32X4#,
+    indexWord64OffAddrAsWord64X2#,
+    indexWord8OffAddrAsWord8X32#,
+    indexWord16OffAddrAsWord16X16#,
+    indexWord32OffAddrAsWord32X8#,
+    indexWord64OffAddrAsWord64X4#,
+    indexWord8OffAddrAsWord8X64#,
+    indexWord16OffAddrAsWord16X32#,
+    indexWord32OffAddrAsWord32X16#,
+    indexWord64OffAddrAsWord64X8#,
+    indexFloatOffAddrAsFloatX4#,
+    indexDoubleOffAddrAsDoubleX2#,
+    indexFloatOffAddrAsFloatX8#,
+    indexDoubleOffAddrAsDoubleX4#,
+    indexFloatOffAddrAsFloatX16#,
+    indexDoubleOffAddrAsDoubleX8#,
+    readInt8OffAddrAsInt8X16#,
+    readInt16OffAddrAsInt16X8#,
+    readInt32OffAddrAsInt32X4#,
+    readInt64OffAddrAsInt64X2#,
+    readInt8OffAddrAsInt8X32#,
+    readInt16OffAddrAsInt16X16#,
+    readInt32OffAddrAsInt32X8#,
+    readInt64OffAddrAsInt64X4#,
+    readInt8OffAddrAsInt8X64#,
+    readInt16OffAddrAsInt16X32#,
+    readInt32OffAddrAsInt32X16#,
+    readInt64OffAddrAsInt64X8#,
+    readWord8OffAddrAsWord8X16#,
+    readWord16OffAddrAsWord16X8#,
+    readWord32OffAddrAsWord32X4#,
+    readWord64OffAddrAsWord64X2#,
+    readWord8OffAddrAsWord8X32#,
+    readWord16OffAddrAsWord16X16#,
+    readWord32OffAddrAsWord32X8#,
+    readWord64OffAddrAsWord64X4#,
+    readWord8OffAddrAsWord8X64#,
+    readWord16OffAddrAsWord16X32#,
+    readWord32OffAddrAsWord32X16#,
+    readWord64OffAddrAsWord64X8#,
+    readFloatOffAddrAsFloatX4#,
+    readDoubleOffAddrAsDoubleX2#,
+    readFloatOffAddrAsFloatX8#,
+    readDoubleOffAddrAsDoubleX4#,
+    readFloatOffAddrAsFloatX16#,
+    readDoubleOffAddrAsDoubleX8#,
+    writeInt8OffAddrAsInt8X16#,
+    writeInt16OffAddrAsInt16X8#,
+    writeInt32OffAddrAsInt32X4#,
+    writeInt64OffAddrAsInt64X2#,
+    writeInt8OffAddrAsInt8X32#,
+    writeInt16OffAddrAsInt16X16#,
+    writeInt32OffAddrAsInt32X8#,
+    writeInt64OffAddrAsInt64X4#,
+    writeInt8OffAddrAsInt8X64#,
+    writeInt16OffAddrAsInt16X32#,
+    writeInt32OffAddrAsInt32X16#,
+    writeInt64OffAddrAsInt64X8#,
+    writeWord8OffAddrAsWord8X16#,
+    writeWord16OffAddrAsWord16X8#,
+    writeWord32OffAddrAsWord32X4#,
+    writeWord64OffAddrAsWord64X2#,
+    writeWord8OffAddrAsWord8X32#,
+    writeWord16OffAddrAsWord16X16#,
+    writeWord32OffAddrAsWord32X8#,
+    writeWord64OffAddrAsWord64X4#,
+    writeWord8OffAddrAsWord8X64#,
+    writeWord16OffAddrAsWord16X32#,
+    writeWord32OffAddrAsWord32X16#,
+    writeWord64OffAddrAsWord64X8#,
+    writeFloatOffAddrAsFloatX4#,
+    writeDoubleOffAddrAsDoubleX2#,
+    writeFloatOffAddrAsFloatX8#,
+    writeDoubleOffAddrAsDoubleX4#,
+    writeFloatOffAddrAsFloatX16#,
+    writeDoubleOffAddrAsDoubleX8#,
+    
 -- * Prefetch
--- |Prefetch operations
+-- |Prefetch operations: Note how every prefetch operation has a name
+--   with the pattern prefetch*N#, where N is either 0,1,2, or 3.
+-- 
+--   This suffix number, N, is the \"locality level\" of the prefetch, following the
+--   convention in GCC and other compilers.
+--   Higher locality numbers correspond to the memory being loaded in more
+--   levels of the cpu cache, and being retained after initial use. The naming
+--   convention follows the naming convention of the prefetch intrinsic found
+--   in the GCC and Clang C compilers.
+-- 
+--   On the LLVM backend, prefetch*N# uses the LLVM prefetch intrinsic
+--   with locality level N. The code generated by LLVM is target architecture
+--   dependent, but should agree with the GHC NCG on x86 systems.
+-- 
+--   On the Sparc and PPC native backends, prefetch*N is a No-Op.
+-- 
+--   On the x86 NCG, N=0 will generate prefetchNTA,
+--   N=1 generates prefetcht2, N=2 generates prefetcht1, and
+--   N=3 generates prefetcht0.
+-- 
+--   For streaming workloads, the prefetch*0 operations are recommended.
+--   For workloads which do many reads or writes to a memory location in a short period of time,
+--   prefetch*3 operations are recommended.
+-- 
+--   For further reading about prefetch and associated systems performance optimization,
+--   the instruction set and optimization manuals by Intel and other CPU vendors are
+--   excellent starting place.
+-- 
+-- 
+--   The \"Intel 64 and IA-32 Architectures Optimization Reference Manual\" is
+--   especially a helpful read, even if your software is meant for other CPU
+--   architectures or vendor hardware. The manual can be found at
+--   http:\/\/www.intel.com\/content\/www\/us\/en\/architecture-and-technology\/64-ia-32-architectures-optimization-manual.html .
+-- 
+--   The @prefetchMutableByteArray@ family of operations has the order of operations
+--   determined by passing around the @State#@ token.
+-- 
+--   For the @prefetchByteArray@
+--   and @prefetchAddr@ families of operations, consider the following example:
+-- 
+--   @let a1 = prefetchByteArray2# a n in ...a1... @
+-- 
+--   In the above fragement, @a@ is the input variable for the prefetch
+--   and @a1 == a@ will be true. To ensure that the prefetch is not treated as deadcode,
+--   the body of the let should only use @a1@ and NOT @a@. The same principle
+--   applies for uses of prefetch in a loop.
+-- 
+--   
 
 
-	prefetchByteArray#,
-	prefetchMutableByteArray#,
-	prefetchAddr#,
+    prefetchByteArray3#,
+    prefetchMutableByteArray3#,
+    prefetchAddr3#,
+    prefetchByteArray2#,
+    prefetchMutableByteArray2#,
+    prefetchAddr2#,
+    prefetchByteArray1#,
+    prefetchMutableByteArray1#,
+    prefetchAddr1#,
+    prefetchByteArray0#,
+    prefetchMutableByteArray0#,
+    prefetchAddr0#,
 ) where
-
-import GHC.Types
 
 {-
 has_side_effects = False
@@ -727,29 +1352,30 @@ out_of_line = False
 can_fail = False
 commutable = False
 code_size = {  primOpCodeSizeDefault }
-strictness = {  \ arity -> mkStrictSig (mkTopDmdType (replicate arity topDmd) topRes) }
+strictness = {  \ arity -> mkClosedStrictSig (replicate arity topDmd) topRes }
 fixity = Nothing
 llvm_only = False
+
 -}
 
 data Char#
 
-gtChar# :: Char# -> Char# -> Bool
+gtChar# :: Char# -> Char# -> Int#
 gtChar# = let x = x in x
 
-geChar# :: Char# -> Char# -> Bool
+geChar# :: Char# -> Char# -> Int#
 geChar# = let x = x in x
 
-eqChar# :: Char# -> Char# -> Bool
+eqChar# :: Char# -> Char# -> Int#
 eqChar# = let x = x in x
 
-neChar# :: Char# -> Char# -> Bool
+neChar# :: Char# -> Char# -> Int#
 neChar# = let x = x in x
 
-ltChar# :: Char# -> Char# -> Bool
+ltChar# :: Char# -> Char# -> Int#
 ltChar# = let x = x in x
 
-leChar# :: Char# -> Char# -> Bool
+leChar# :: Char# -> Char# -> Int#
 leChar# = let x = x in x
 
 ord# :: Char# -> Int#
@@ -774,17 +1400,17 @@ infixl 7 *#
 -- |Return non-zero if there is any possibility that the upper word of a
 --     signed integer multiply might contain useful information.  Return
 --     zero only if you are completely sure that no overflow can occur.
---     On a 32-bit platform, the recommmended implementation is to do a 
+--     On a 32-bit platform, the recommmended implementation is to do a
 --     32 x 32 -> 64 signed multiply, and subtract result[63:32] from
---     (result[31] >>signed 31).  If this is zero, meaning that the 
+--     (result[31] >>signed 31).  If this is zero, meaning that the
 --     upper word is merely a sign extension of the lower one, no
 --     overflow can occur.
 -- 
---     On a 64-bit platform it is not always possible to 
---     acquire the top 64 bits of the result.  Therefore, a recommended 
---     implementation is to take the absolute value of both operands, and 
---     return 0 iff bits[63:31] of them are zero, since that means that their 
---     magnitudes fit within 31 bits, so the magnitude of the product must fit 
+--     On a 64-bit platform it is not always possible to
+--     acquire the top 64 bits of the result.  Therefore, a recommended
+--     implementation is to take the absolute value of both operands, and
+--     return 0 iff bits[63:31] of them are zero, since that means that their
+--     magnitudes fit within 31 bits, so the magnitude of the product must fit
 --     into 62 bits.
 -- 
 --     If in doubt, return non-zero, but do make an effort to create the
@@ -825,40 +1451,40 @@ notI# = let x = x in x
 negateInt# :: Int# -> Int#
 negateInt# = let x = x in x
 
--- |Add with carry.  First member of result is (wrapped) sum; 
+-- |Add with carry.  First member of result is (wrapped) sum;
 --           second member is 0 iff no overflow occured.
 
 addIntC# :: Int# -> Int# -> (# Int#,Int# #)
 addIntC# = let x = x in x
 
--- |Subtract with carry.  First member of result is (wrapped) difference; 
+-- |Subtract with carry.  First member of result is (wrapped) difference;
 --           second member is 0 iff no overflow occured.
 
 subIntC# :: Int# -> Int# -> (# Int#,Int# #)
 subIntC# = let x = x in x
 
 infix 4 >#
-(>#) :: Int# -> Int# -> Bool
+(>#) :: Int# -> Int# -> Int#
 (>#) = let x = x in x
 
 infix 4 >=#
-(>=#) :: Int# -> Int# -> Bool
+(>=#) :: Int# -> Int# -> Int#
 (>=#) = let x = x in x
 
 infix 4 ==#
-(==#) :: Int# -> Int# -> Bool
+(==#) :: Int# -> Int# -> Int#
 (==#) = let x = x in x
 
 infix 4 /=#
-(/=#) :: Int# -> Int# -> Bool
+(/=#) :: Int# -> Int# -> Int#
 (/=#) = let x = x in x
 
 infix 4 <#
-(<#) :: Int# -> Int# -> Bool
+(<#) :: Int# -> Int# -> Int#
 (<#) = let x = x in x
 
 infix 4 <=#
-(<=#) :: Int# -> Int# -> Bool
+(<=#) :: Int# -> Int# -> Int#
 (<=#) = let x = x in x
 
 chr# :: Int# -> Char#
@@ -953,22 +1579,22 @@ uncheckedShiftRL# = let x = x in x
 word2Int# :: Word# -> Int#
 word2Int# = let x = x in x
 
-gtWord# :: Word# -> Word# -> Bool
+gtWord# :: Word# -> Word# -> Int#
 gtWord# = let x = x in x
 
-geWord# :: Word# -> Word# -> Bool
+geWord# :: Word# -> Word# -> Int#
 geWord# = let x = x in x
 
-eqWord# :: Word# -> Word# -> Bool
+eqWord# :: Word# -> Word# -> Int#
 eqWord# = let x = x in x
 
-neWord# :: Word# -> Word# -> Bool
+neWord# :: Word# -> Word# -> Int#
 neWord# = let x = x in x
 
-ltWord# :: Word# -> Word# -> Bool
+ltWord# :: Word# -> Word# -> Int#
 ltWord# = let x = x in x
 
-leWord# :: Word# -> Word# -> Bool
+leWord# :: Word# -> Word# -> Int#
 leWord# = let x = x in x
 
 -- |Count the number of set bits in the lower 8 bits of a word.
@@ -988,13 +1614,33 @@ popCnt32# = let x = x in x
 
 -- |Count the number of set bits in a 64-bit word.
 
-popCnt64# :: Word64# -> Word#
+popCnt64# :: Word# -> Word#
 popCnt64# = let x = x in x
 
 -- |Count the number of set bits in a word.
 
 popCnt# :: Word# -> Word#
 popCnt# = let x = x in x
+
+-- |Swap bytes in the lower 16 bits of a word. The higher bytes are undefined. 
+
+byteSwap16# :: Word# -> Word#
+byteSwap16# = let x = x in x
+
+-- |Swap bytes in the lower 32 bits of a word. The higher bytes are undefined. 
+
+byteSwap32# :: Word# -> Word#
+byteSwap32# = let x = x in x
+
+-- |Swap bytes in a 64 bits of a word.
+
+byteSwap64# :: Word# -> Word#
+byteSwap64# = let x = x in x
+
+-- |Swap bytes in a word.
+
+byteSwap# :: Word# -> Word#
+byteSwap# = let x = x in x
 
 narrow8Int# :: Int# -> Int#
 narrow8Int# = let x = x in x
@@ -1014,34 +1660,30 @@ narrow16Word# = let x = x in x
 narrow32Word# :: Word# -> Word#
 narrow32Word# = let x = x in x
 
-data Int64#
-
-data Word64#
-
 data Double#
 
 infix 4 >##
-(>##) :: Double# -> Double# -> Bool
+(>##) :: Double# -> Double# -> Int#
 (>##) = let x = x in x
 
 infix 4 >=##
-(>=##) :: Double# -> Double# -> Bool
+(>=##) :: Double# -> Double# -> Int#
 (>=##) = let x = x in x
 
 infix 4 ==##
-(==##) :: Double# -> Double# -> Bool
+(==##) :: Double# -> Double# -> Int#
 (==##) = let x = x in x
 
 infix 4 /=##
-(/=##) :: Double# -> Double# -> Bool
+(/=##) :: Double# -> Double# -> Int#
 (/=##) = let x = x in x
 
 infix 4 <##
-(<##) :: Double# -> Double# -> Bool
+(<##) :: Double# -> Double# -> Int#
 (<##) = let x = x in x
 
 infix 4 <=##
-(<=##) :: Double# -> Double# -> Bool
+(<=##) :: Double# -> Double# -> Int#
 (<=##) = let x = x in x
 
 infixl 6 +##
@@ -1124,22 +1766,22 @@ decodeDouble_2Int# = let x = x in x
 
 data Float#
 
-gtFloat# :: Float# -> Float# -> Bool
+gtFloat# :: Float# -> Float# -> Int#
 gtFloat# = let x = x in x
 
-geFloat# :: Float# -> Float# -> Bool
+geFloat# :: Float# -> Float# -> Int#
 geFloat# = let x = x in x
 
-eqFloat# :: Float# -> Float# -> Bool
+eqFloat# :: Float# -> Float# -> Int#
 eqFloat# = let x = x in x
 
-neFloat# :: Float# -> Float# -> Bool
+neFloat# :: Float# -> Float# -> Int#
 neFloat# = let x = x in x
 
-ltFloat# :: Float# -> Float# -> Bool
+ltFloat# :: Float# -> Float# -> Int#
 ltFloat# = let x = x in x
 
-leFloat# :: Float# -> Float# -> Bool
+leFloat# :: Float# -> Float# -> Int#
 leFloat# = let x = x in x
 
 plusFloat# :: Float# -> Float# -> Float#
@@ -1223,7 +1865,7 @@ data MutableArray# s a
 newArray# :: Int# -> a -> State# s -> (# State# s,MutableArray# s a #)
 newArray# = let x = x in x
 
-sameMutableArray# :: MutableArray# s a -> MutableArray# s a -> Bool
+sameMutableArray# :: MutableArray# s a -> MutableArray# s a -> Int#
 sameMutableArray# = let x = x in x
 
 -- |Read from specified index of mutable array. Result is not yet evaluated.
@@ -1275,7 +1917,7 @@ copyArray# = let x = x in x
 copyMutableArray# :: MutableArray# s a -> Int# -> MutableArray# s a -> Int# -> Int# -> State# s -> State# s
 copyMutableArray# = let x = x in x
 
--- |Return a newly allocated Array# with the specified subrange of the provided Array#. 
+-- |Return a newly allocated Array# with the specified subrange of the provided Array#.
 --    The provided Array# should contain the full subrange specified by the two Int#s, but this is not checked.
 
 cloneArray# :: Array# a -> Int# -> Int# -> Array# a
@@ -1298,6 +1940,11 @@ freezeArray# = let x = x in x
 
 thawArray# :: Array# a -> Int# -> Int# -> State# s -> (# State# s,MutableArray# s a #)
 thawArray# = let x = x in x
+
+-- |Unsafe, machine-level atomic compare and swap on an element within an Array.
+
+casArray# :: MutableArray# s a -> Int# -> a -> a -> State# s -> (# State# s,Int#,a #)
+casArray# = let x = x in x
 
 data ByteArray#
 
@@ -1324,7 +1971,7 @@ newAlignedPinnedByteArray# = let x = x in x
 byteArrayContents# :: ByteArray# -> Addr#
 byteArrayContents# = let x = x in x
 
-sameMutableByteArray# :: MutableByteArray# s -> MutableByteArray# s -> Bool
+sameMutableByteArray# :: MutableByteArray# s -> MutableByteArray# s -> Int#
 sameMutableByteArray# = let x = x in x
 
 -- |Make a mutable byte array immutable, without copying.
@@ -1379,7 +2026,7 @@ indexInt16Array# = let x = x in x
 indexInt32Array# :: ByteArray# -> Int# -> Int#
 indexInt32Array# = let x = x in x
 
-indexInt64Array# :: ByteArray# -> Int# -> Int64#
+indexInt64Array# :: ByteArray# -> Int# -> Int#
 indexInt64Array# = let x = x in x
 
 indexWord8Array# :: ByteArray# -> Int# -> Word#
@@ -1391,7 +2038,7 @@ indexWord16Array# = let x = x in x
 indexWord32Array# :: ByteArray# -> Int# -> Word#
 indexWord32Array# = let x = x in x
 
-indexWord64Array# :: ByteArray# -> Int# -> Word64#
+indexWord64Array# :: ByteArray# -> Int# -> Word#
 indexWord64Array# = let x = x in x
 
 -- |Read 8-bit character; offset in bytes.
@@ -1431,7 +2078,7 @@ readInt16Array# = let x = x in x
 readInt32Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int# #)
 readInt32Array# = let x = x in x
 
-readInt64Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int64# #)
+readInt64Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int# #)
 readInt64Array# = let x = x in x
 
 readWord8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word# #)
@@ -1443,7 +2090,7 @@ readWord16Array# = let x = x in x
 readWord32Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word# #)
 readWord32Array# = let x = x in x
 
-readWord64Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word64# #)
+readWord64Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word# #)
 readWord64Array# = let x = x in x
 
 -- |Write 8-bit character; offset in bytes.
@@ -1483,7 +2130,7 @@ writeInt16Array# = let x = x in x
 writeInt32Array# :: MutableByteArray# s -> Int# -> Int# -> State# s -> State# s
 writeInt32Array# = let x = x in x
 
-writeInt64Array# :: MutableByteArray# s -> Int# -> Int64# -> State# s -> State# s
+writeInt64Array# :: MutableByteArray# s -> Int# -> Int# -> State# s -> State# s
 writeInt64Array# = let x = x in x
 
 writeWord8Array# :: MutableByteArray# s -> Int# -> Word# -> State# s -> State# s
@@ -1495,7 +2142,7 @@ writeWord16Array# = let x = x in x
 writeWord32Array# :: MutableByteArray# s -> Int# -> Word# -> State# s -> State# s
 writeWord32Array# = let x = x in x
 
-writeWord64Array# :: MutableByteArray# s -> Int# -> Word64# -> State# s -> State# s
+writeWord64Array# :: MutableByteArray# s -> Int# -> Word# -> State# s -> State# s
 writeWord64Array# = let x = x in x
 
 -- |Copy a range of the ByteArray# to the specified region in the MutableByteArray#.
@@ -1511,10 +2158,47 @@ copyByteArray# = let x = x in x
 copyMutableByteArray# :: MutableByteArray# s -> Int# -> MutableByteArray# s -> Int# -> Int# -> State# s -> State# s
 copyMutableByteArray# = let x = x in x
 
+-- |Copy a range of the ByteArray# to the memory range starting at the Addr#.
+--    The ByteArray# and the memory region at Addr# must fully contain the
+--    specified ranges, but this is not checked. The Addr# must not point into the
+--    ByteArray# (e.g. if the ByteArray# were pinned), but this is not checked
+--    either.
+
+copyByteArrayToAddr# :: ByteArray# -> Int# -> Addr# -> Int# -> State# s -> State# s
+copyByteArrayToAddr# = let x = x in x
+
+-- |Copy a range of the MutableByteArray# to the memory range starting at the
+--    Addr#. The MutableByteArray# and the memory region at Addr# must fully
+--    contain the specified ranges, but this is not checked. The Addr# must not
+--    point into the MutableByteArray# (e.g. if the MutableByteArray# were
+--    pinned), but this is not checked either.
+
+copyMutableByteArrayToAddr# :: MutableByteArray# s -> Int# -> Addr# -> Int# -> State# s -> State# s
+copyMutableByteArrayToAddr# = let x = x in x
+
+-- |Copy a memory range starting at the Addr# to the specified range in the
+--    MutableByteArray#. The memory region at Addr# and the ByteArray# must fully
+--    contain the specified ranges, but this is not checked. The Addr# must not
+--    point into the MutableByteArray# (e.g. if the MutableByteArray# were pinned),
+--    but this is not checked either.
+
+copyAddrToByteArray# :: Addr# -> MutableByteArray# s -> Int# -> Int# -> State# s -> State# s
+copyAddrToByteArray# = let x = x in x
+
 -- |Set the range of the MutableByteArray# to the specified character.
 
 setByteArray# :: MutableByteArray# s -> Int# -> Int# -> Int# -> State# s -> State# s
 setByteArray# = let x = x in x
+
+-- |Machine-level atomic compare and swap on a word within a ByteArray.
+
+casIntArray# :: MutableByteArray# s -> Int# -> Int# -> Int# -> State# s -> (# State# s,Int# #)
+casIntArray# = let x = x in x
+
+-- |Machine-level word-sized fetch-and-add within a ByteArray.
+
+fetchAddIntArray# :: MutableByteArray# s -> Int# -> Int# -> State# s -> (# State# s,Int# #)
+fetchAddIntArray# = let x = x in x
 
 data ArrayArray#
 
@@ -1527,7 +2211,7 @@ data MutableArrayArray# s
 newArrayArray# :: Int# -> State# s -> (# State# s,MutableArrayArray# s #)
 newArrayArray# = let x = x in x
 
-sameMutableArrayArray# :: MutableArrayArray# s -> MutableArrayArray# s -> Bool
+sameMutableArrayArray# :: MutableArrayArray# s -> MutableArrayArray# s -> Int#
 sameMutableArrayArray# = let x = x in x
 
 -- |Make a mutable array of arrays immutable, without copying.
@@ -1590,7 +2274,7 @@ copyMutableArrayArray# :: MutableArrayArray# s -> Int# -> MutableArrayArray# s -
 copyMutableArrayArray# = let x = x in x
 
 -- | An arbitrary machine address assumed to point outside
--- 	 the garbage-collected heap. 
+--   the garbage-collected heap. 
 
 data Addr#
 
@@ -1603,13 +2287,13 @@ plusAddr# :: Addr# -> Int# -> Addr#
 plusAddr# = let x = x in x
 
 -- |Result is meaningless if two @Addr\#@s are so far apart that their
--- 	 difference doesn\'t fit in an @Int\#@.
+--   difference doesn\'t fit in an @Int\#@.
 
 minusAddr# :: Addr# -> Addr# -> Int#
 minusAddr# = let x = x in x
 
 -- |Return the remainder when the @Addr\#@ arg, treated like an @Int\#@,
--- 	  is divided by the @Int\#@ arg.
+--    is divided by the @Int\#@ arg.
 
 remAddr# :: Addr# -> Int# -> Int#
 remAddr# = let x = x in x
@@ -1624,22 +2308,22 @@ addr2Int# = let x = x in x
 int2Addr# :: Int# -> Addr#
 int2Addr# = let x = x in x
 
-gtAddr# :: Addr# -> Addr# -> Bool
+gtAddr# :: Addr# -> Addr# -> Int#
 gtAddr# = let x = x in x
 
-geAddr# :: Addr# -> Addr# -> Bool
+geAddr# :: Addr# -> Addr# -> Int#
 geAddr# = let x = x in x
 
-eqAddr# :: Addr# -> Addr# -> Bool
+eqAddr# :: Addr# -> Addr# -> Int#
 eqAddr# = let x = x in x
 
-neAddr# :: Addr# -> Addr# -> Bool
+neAddr# :: Addr# -> Addr# -> Int#
 neAddr# = let x = x in x
 
-ltAddr# :: Addr# -> Addr# -> Bool
+ltAddr# :: Addr# -> Addr# -> Int#
 ltAddr# = let x = x in x
 
-leAddr# :: Addr# -> Addr# -> Bool
+leAddr# :: Addr# -> Addr# -> Int#
 leAddr# = let x = x in x
 
 -- |Reads 8-bit character; offset in bytes.
@@ -1679,7 +2363,7 @@ indexInt16OffAddr# = let x = x in x
 indexInt32OffAddr# :: Addr# -> Int# -> Int#
 indexInt32OffAddr# = let x = x in x
 
-indexInt64OffAddr# :: Addr# -> Int# -> Int64#
+indexInt64OffAddr# :: Addr# -> Int# -> Int#
 indexInt64OffAddr# = let x = x in x
 
 indexWord8OffAddr# :: Addr# -> Int# -> Word#
@@ -1691,7 +2375,7 @@ indexWord16OffAddr# = let x = x in x
 indexWord32OffAddr# :: Addr# -> Int# -> Word#
 indexWord32OffAddr# = let x = x in x
 
-indexWord64OffAddr# :: Addr# -> Int# -> Word64#
+indexWord64OffAddr# :: Addr# -> Int# -> Word#
 indexWord64OffAddr# = let x = x in x
 
 -- |Reads 8-bit character; offset in bytes.
@@ -1731,7 +2415,7 @@ readInt16OffAddr# = let x = x in x
 readInt32OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int# #)
 readInt32OffAddr# = let x = x in x
 
-readInt64OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int64# #)
+readInt64OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int# #)
 readInt64OffAddr# = let x = x in x
 
 readWord8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word# #)
@@ -1743,7 +2427,7 @@ readWord16OffAddr# = let x = x in x
 readWord32OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word# #)
 readWord32OffAddr# = let x = x in x
 
-readWord64OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word64# #)
+readWord64OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word# #)
 readWord64OffAddr# = let x = x in x
 
 writeCharOffAddr# :: Addr# -> Int# -> Char# -> State# s -> State# s
@@ -1779,7 +2463,7 @@ writeInt16OffAddr# = let x = x in x
 writeInt32OffAddr# :: Addr# -> Int# -> Int# -> State# s -> State# s
 writeInt32OffAddr# = let x = x in x
 
-writeInt64OffAddr# :: Addr# -> Int# -> Int64# -> State# s -> State# s
+writeInt64OffAddr# :: Addr# -> Int# -> Int# -> State# s -> State# s
 writeInt64OffAddr# = let x = x in x
 
 writeWord8OffAddr# :: Addr# -> Int# -> Word# -> State# s -> State# s
@@ -1791,7 +2475,7 @@ writeWord16OffAddr# = let x = x in x
 writeWord32OffAddr# :: Addr# -> Int# -> Word# -> State# s -> State# s
 writeWord32OffAddr# = let x = x in x
 
-writeWord64OffAddr# :: Addr# -> Int# -> Word64# -> State# s -> State# s
+writeWord64OffAddr# :: Addr# -> Int# -> Word# -> State# s -> State# s
 writeWord64OffAddr# = let x = x in x
 
 -- |A @MutVar\#@ behaves like a single-element mutable array.
@@ -1813,7 +2497,7 @@ readMutVar# = let x = x in x
 writeMutVar# :: MutVar# s a -> a -> State# s -> State# s
 writeMutVar# = let x = x in x
 
-sameMutVar# :: MutVar# s a -> MutVar# s a -> Bool
+sameMutVar# :: MutVar# s a -> MutVar# s a -> Int#
 sameMutVar# = let x = x in x
 
 atomicModifyMutVar# :: MutVar# s a -> (a -> b) -> State# s -> (# State# s,c #)
@@ -1880,12 +2564,12 @@ readTVarIO# = let x = x in x
 writeTVar# :: TVar# s a -> a -> State# s -> State# s
 writeTVar# = let x = x in x
 
-sameTVar# :: TVar# s a -> TVar# s a -> Bool
+sameTVar# :: TVar# s a -> TVar# s a -> Int#
 sameTVar# = let x = x in x
 
 -- | A shared mutable variable (/not/ the same as a @MutVar\#@!).
--- 	(Note: in a non-concurrent implementation, @(MVar\# a)@ can be
--- 	represented by @(MutVar\# (Maybe a))@.) 
+--  (Note: in a non-concurrent implementation, @(MVar\# a)@ can be
+--  represented by @(MutVar\# (Maybe a))@.) 
 
 data MVar# s a
 
@@ -1918,7 +2602,20 @@ putMVar# = let x = x in x
 tryPutMVar# :: MVar# s a -> a -> State# s -> (# State# s,Int# #)
 tryPutMVar# = let x = x in x
 
-sameMVar# :: MVar# s a -> MVar# s a -> Bool
+-- |If @MVar\#@ is empty, block until it becomes full.
+--    Then read its contents without modifying the MVar, without possibility
+--    of intervention from other threads.
+
+readMVar# :: MVar# s a -> State# s -> (# State# s,a #)
+readMVar# = let x = x in x
+
+-- |If @MVar\#@ is empty, immediately return with integer 0 and value undefined.
+--    Otherwise, return with integer 1 and contents of @MVar\#@.
+
+tryReadMVar# :: MVar# s a -> State# s -> (# State# s,Int#,a #)
+tryReadMVar# = let x = x in x
+
+sameMVar# :: MVar# s a -> MVar# s a -> Int#
 sameMVar# = let x = x in x
 
 -- |Return 1 if @MVar\#@ is empty; 0 otherwise.
@@ -1942,22 +2639,22 @@ waitWrite# :: Int# -> State# s -> State# s
 waitWrite# = let x = x in x
 
 -- | @State\#@ is the primitive, unlifted type of states.  It has
--- 	one type parameter, thus @State\# RealWorld@, or @State\# s@,
--- 	where s is a type variable. The only purpose of the type parameter
--- 	is to keep different state threads separate.  It is represented by
--- 	nothing at all. 
+--  one type parameter, thus @State\# RealWorld@, or @State\# s@,
+--  where s is a type variable. The only purpose of the type parameter
+--  is to keep different state threads separate.  It is represented by
+--  nothing at all. 
 
 data State# s
 
 -- | @RealWorld@ is deeply magical.  It is /primitive/, but it is not
--- 	/unlifted/ (hence @ptrArg@).  We never manipulate values of type
--- 	@RealWorld@; it\'s only used in the type system, to parameterise @State\#@. 
+--  /unlifted/ (hence @ptrArg@).  We never manipulate values of type
+--  @RealWorld@; it\'s only used in the type system, to parameterise @State\#@. 
 
 data RealWorld
 
 -- |(In a non-concurrent implementation, this can be a singleton
--- 	type, whose (unique) value is returned by @myThreadId\#@.  The 
--- 	other operations can be omitted.)
+--  type, whose (unique) value is returned by @myThreadId\#@.  The
+--  other operations can be omitted.)
 
 data ThreadId#
 
@@ -1996,8 +2693,15 @@ mkWeak# = let x = x in x
 mkWeakNoFinalizer# :: o -> b -> State# (RealWorld) -> (# State# (RealWorld),Weak# b #)
 mkWeakNoFinalizer# = let x = x in x
 
-mkWeakForeignEnv# :: o -> b -> Addr# -> Addr# -> Int# -> Addr# -> State# (RealWorld) -> (# State# (RealWorld),Weak# b #)
-mkWeakForeignEnv# = let x = x in x
+-- | @addCFinalizerToWeak# fptr ptr flag eptr w@ attaches a C
+--      function pointer @fptr@ to a weak pointer @w@ as a finalizer. If
+--      @flag@ is zero, @fptr@ will be called with one argument,
+--      @ptr@. Otherwise, it will be called with two arguments,
+--      @eptr@ and @ptr@. @addCFinalizerToWeak#@ returns
+--      1 on success, or 0 if @w@ is already dead. 
+
+addCFinalizerToWeak# :: Addr# -> Addr# -> Int# -> Addr# -> Weak# b -> State# (RealWorld) -> (# State# (RealWorld),Int# #)
+addCFinalizerToWeak# = let x = x in x
 
 deRefWeak# :: Weak# a -> State# (RealWorld) -> (# State# (RealWorld),Int#,a #)
 deRefWeak# = let x = x in x
@@ -2107,35 +2811,49 @@ getCCSOf# = let x = x in x
 getCurrentCCS# :: a -> State# s -> (# State# s,Addr# #)
 getCurrentCCS# = let x = x in x
 
+-- | The type constructor @Proxy#@ is used to bear witness to some
+--    type variable. It\'s used when you want to pass around proxy values
+--    for doing things like modelling type applications. A @Proxy#@
+--    is not only unboxed, it also has a polymorphic kind, and has no
+--    runtime representation, being totally free. 
+
+data Proxy# a
+
+-- | Witness for an unboxed @Proxy#@ value, which has no runtime
+--    representation. 
+
+proxy# :: Proxy# a
+proxy# = let x = x in x
+
 -- | Evaluates its first argument to head normal form, and then returns its second
--- 	argument as the result. 
+--  argument as the result. 
 
 seq :: a -> b -> b
 seq = let x = x in x
 
 -- | The type constructor @Any@ is type to which you can unsafely coerce any
--- 	lifted type, and back. 
+--  lifted type, and back.
 -- 
--- 	  * It is lifted, and hence represented by a pointer
+--    * It is lifted, and hence represented by a pointer
 -- 
--- 	  * It does not claim to be a /data/ type, and that\'s important for
--- 	    the code generator, because the code gen may /enter/ a data value
--- 	    but never enters a function value.  
+--    * It does not claim to be a /data/ type, and that\'s important for
+--      the code generator, because the code gen may /enter/ a data value
+--      but never enters a function value.
 -- 
--- 	It\'s also used to instantiate un-constrained type variables after type
--- 	checking.  For example, @length@ has type
+--  It\'s also used to instantiate un-constrained type variables after type
+--  checking.  For example, @length@ has type
 -- 
--- 	@length :: forall a. [a] -> Int@
+--  @length :: forall a. [a] -> Int@
 -- 
--- 	and the list datacon for the empty list has type
+--  and the list datacon for the empty list has type
 -- 
--- 	@[] :: forall a. [a]@
+--  @[] :: forall a. [a]@
 -- 
--- 	In order to compose these two terms as @length []@ a type
--- 	application is required, but there is no constraint on the
--- 	choice.  In this situation GHC uses @Any@:
+--  In order to compose these two terms as @length []@ a type
+--  application is required, but there is no constraint on the
+--  choice.  In this situation GHC uses @Any@:
 -- 
--- 	@length (Any *) ([] (Any *))@
+--  @length (Any *) ([] (Any *))@
 -- 
 --         Note that @Any@ is kind polymorphic, and takes a kind @k@ as its
 --         first argument. The kind of @Any@ is thus @forall k. k -> k@.
@@ -2159,10 +2877,10 @@ data Any k
 data AnyK
 
 -- | The function @unsafeCoerce\#@ allows you to side-step the typechecker entirely. That
--- 	is, it allows you to coerce any type into any other type. If you use this function,
--- 	you had better get it right, otherwise segmentation faults await. It is generally
--- 	used when you want to write a program that you know is well-typed, but where Haskell\'s
--- 	type system is not expressive enough to prove that it is well typed.
+--  is, it allows you to coerce any type into any other type. If you use this function,
+--  you had better get it right, otherwise segmentation faults await. It is generally
+--  used when you want to write a program that you know is well-typed, but where Haskell\'s
+--  type system is not expressive enough to prove that it is well typed.
 -- 
 --         The following uses of @unsafeCoerce\#@ are supposed to work (i.e. not lead to
 --         spurious compile-time or run-time crashes):
@@ -2176,18 +2894,18 @@ data AnyK
 -- 
 --          * Casting between two types that have the same runtime representation.  One case is when
 --            the two types differ only in \"phantom\" type parameters, for example
---            @Ptr Int@ to @Ptr Float@, or @[Int]@ to @[Float]@ when the list is 
+--            @Ptr Int@ to @Ptr Float@, or @[Int]@ to @[Float]@ when the list is
 --            known to be empty.  Also, a @newtype@ of a type @T@ has the same representation
 --            at runtime as @T@.
 -- 
 --         Other uses of @unsafeCoerce\#@ are undefined.  In particular, you should not use
--- 	@unsafeCoerce\#@ to cast a T to an algebraic data type D, unless T is also
--- 	an algebraic data type.  For example, do not cast @Int->Int@ to @Bool@, even if
+--  @unsafeCoerce\#@ to cast a T to an algebraic data type D, unless T is also
+--  an algebraic data type.  For example, do not cast @Int->Int@ to @Bool@, even if
 --         you later cast that @Bool@ back to @Int->Int@ before applying it.  The reasons
 --         have to do with GHC\'s internal representation details (for the congnoscenti, data values
--- 	can be entered but function closures cannot).  If you want a safe type to cast things
--- 	to, use @Any@, which is not an algebraic data type.
--- 	
+--  can be entered but function closures cannot).  If you want a safe type to cast things
+--  to, use @Any@, which is not an algebraic data type.
+-- 
 --         
 
 unsafeCoerce# :: a -> b
@@ -2209,280 +2927,3364 @@ traceEvent# = let x = x in x
 traceMarker# :: Addr# -> State# s -> State# s
 traceMarker# = let x = x in x
 
-data FloatX4#
+-- | The function @coerce@ allows you to safely convert between values of
+--      types that have the same representation with no run-time overhead. In the
+--      simplest case you can use it instead of a newtype constructor, to go from
+--      the newtype\'s concrete type to the abstract type. But it also works in
+--      more complicated settings, e.g. converting a list of newtypes to a list of
+--      concrete types.
+--    
 
-floatToFloatX4# :: Float# -> FloatX4#
-floatToFloatX4# = let x = x in x
+coerce :: Coercible a b => a -> b
+coerce = let x = x in x
 
-packFloatX4# :: Float# -> Float# -> Float# -> Float# -> FloatX4#
-packFloatX4# = let x = x in x
+-- | This two-parameter class has instances for types @a@ and @b@ if
+--      the compiler can infer that they have the same representation. This class
+--      does not have regular instances; instead they are created on-the-fly during
+--      type-checking. Trying to manually declare an instance of @Coercible@
+--      is an error.
+-- 
+--      Nevertheless one can pretend that the following three kinds of instances
+--      exist. First, as a trivial base-case:
+-- 
+--      @instance a a@
+-- 
+--      Furthermore, for every type constructor there is
+--      an instance that allows to coerce under the type constructor. For
+--      example, let @D@ be a prototypical type constructor (@data@ or @newtype@) with three type arguments, which have roles Nominal,
+--      Representational resp. Phantom. Then there is an instance of the form
+-- 
+--      @instance Coercible b b\' => Coercible (D a b c) (D a b\' c\')@
+-- 
+--      Note that the nominal type arguments are equal, the representational type
+--      arguments can differ, but need to have a @Coercible@ instance
+--      themself, and the phantom type arguments can be changed arbitrarily.
+-- 
+--      In SafeHaskell code, this instance is only usable if the constructors of
+--      every type constructor used in the definition of @D@ (including
+--      those of @D@ itself) are in scope.
+-- 
+--      The third kind of instance exists for every @newtype NT = MkNT T@ and
+--      comes in two variants, namely
+-- 
+--      @instance Coercible a T => Coercible a NT@
+-- 
+--      @instance Coercible T b => Coercible NT b@
+-- 
+--      This instance is only usable if the constructor @MkNT@ is in scope.
+-- 
+--      If, as a library author of a type constructor like @Set a@, you
+--      want to prevent a user of your module to write
+--      @coerce :: Set T -> Set NT@,
+--      you need to set the role of @Set@\'s type parameter to Nominal.
+--    
 
-unpackFloatX4# :: FloatX4# -> (# Float#,Float#,Float#,Float# #)
-unpackFloatX4# = let x = x in x
+class Coercible a b
 
-insertFloatX4# :: FloatX4# -> Float# -> Int# -> FloatX4#
-insertFloatX4# = let x = x in x
+data Int8X16#
 
-plusFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
-plusFloatX4# = let x = x in x
-
-minusFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
-minusFloatX4# = let x = x in x
-
-timesFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
-timesFloatX4# = let x = x in x
-
-divideFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
-divideFloatX4# = let x = x in x
-
-negateFloatX4# :: FloatX4# -> FloatX4#
-negateFloatX4# = let x = x in x
-
-indexFloatX4Array# :: ByteArray# -> Int# -> FloatX4#
-indexFloatX4Array# = let x = x in x
-
-readFloatX4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX4# #)
-readFloatX4Array# = let x = x in x
-
-writeFloatX4Array# :: MutableByteArray# s -> Int# -> FloatX4# -> State# s -> State# s
-writeFloatX4Array# = let x = x in x
-
-indexFloatX4OffAddr# :: Addr# -> Int# -> FloatX4#
-indexFloatX4OffAddr# = let x = x in x
-
-readFloatX4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,FloatX4# #)
-readFloatX4OffAddr# = let x = x in x
-
-writeFloatX4OffAddr# :: Addr# -> Int# -> FloatX4# -> State# s -> State# s
-writeFloatX4OffAddr# = let x = x in x
-
-indexFloatArrayAsFloatX4# :: ByteArray# -> Int# -> FloatX4#
-indexFloatArrayAsFloatX4# = let x = x in x
-
-readFloatArrayAsFloatX4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX4# #)
-readFloatArrayAsFloatX4# = let x = x in x
-
-writeFloatArrayAsFloatX4# :: MutableByteArray# s -> Int# -> FloatX4# -> State# s -> State# s
-writeFloatArrayAsFloatX4# = let x = x in x
-
-indexFloatOffAddrAsFloatX4# :: Addr# -> Int# -> FloatX4#
-indexFloatOffAddrAsFloatX4# = let x = x in x
-
-readFloatOffAddrAsFloatX4# :: Addr# -> Int# -> State# s -> (# State# s,FloatX4# #)
-readFloatOffAddrAsFloatX4# = let x = x in x
-
-writeFloatOffAddrAsFloatX4# :: Addr# -> Int# -> FloatX4# -> State# s -> State# s
-writeFloatOffAddrAsFloatX4# = let x = x in x
-
-data DoubleX2#
-
-doubleToDoubleX2# :: Double# -> DoubleX2#
-doubleToDoubleX2# = let x = x in x
-
-insertDoubleX2# :: DoubleX2# -> Double# -> Int# -> DoubleX2#
-insertDoubleX2# = let x = x in x
-
-packDoubleX2# :: Double# -> Double# -> DoubleX2#
-packDoubleX2# = let x = x in x
-
-unpackDoubleX2# :: DoubleX2# -> (# Double#,Double# #)
-unpackDoubleX2# = let x = x in x
-
-plusDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
-plusDoubleX2# = let x = x in x
-
-minusDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
-minusDoubleX2# = let x = x in x
-
-timesDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
-timesDoubleX2# = let x = x in x
-
-divideDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
-divideDoubleX2# = let x = x in x
-
-negateDoubleX2# :: DoubleX2# -> DoubleX2#
-negateDoubleX2# = let x = x in x
-
-indexDoubleX2Array# :: ByteArray# -> Int# -> DoubleX2#
-indexDoubleX2Array# = let x = x in x
-
-readDoubleX2Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX2# #)
-readDoubleX2Array# = let x = x in x
-
-writeDoubleX2Array# :: MutableByteArray# s -> Int# -> DoubleX2# -> State# s -> State# s
-writeDoubleX2Array# = let x = x in x
-
-indexDoubleX2OffAddr# :: Addr# -> Int# -> DoubleX2#
-indexDoubleX2OffAddr# = let x = x in x
-
-readDoubleX2OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX2# #)
-readDoubleX2OffAddr# = let x = x in x
-
-writeDoubleX2OffAddr# :: Addr# -> Int# -> DoubleX2# -> State# s -> State# s
-writeDoubleX2OffAddr# = let x = x in x
-
-indexDoubleArrayAsDoubleX2# :: ByteArray# -> Int# -> DoubleX2#
-indexDoubleArrayAsDoubleX2# = let x = x in x
-
-readDoubleArrayAsDoubleX2# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX2# #)
-readDoubleArrayAsDoubleX2# = let x = x in x
-
-writeDoubleArrayAsDoubleX2# :: MutableByteArray# s -> Int# -> DoubleX2# -> State# s -> State# s
-writeDoubleArrayAsDoubleX2# = let x = x in x
-
-indexDoubleOffAddrAsDoubleX2# :: Addr# -> Int# -> DoubleX2#
-indexDoubleOffAddrAsDoubleX2# = let x = x in x
-
-readDoubleOffAddrAsDoubleX2# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX2# #)
-readDoubleOffAddrAsDoubleX2# = let x = x in x
-
-writeDoubleOffAddrAsDoubleX2# :: Addr# -> Int# -> DoubleX2# -> State# s -> State# s
-writeDoubleOffAddrAsDoubleX2# = let x = x in x
+data Int16X8#
 
 data Int32X4#
 
-int32ToInt32X4# :: Int# -> Int32X4#
-int32ToInt32X4# = let x = x in x
+data Int64X2#
 
-insertInt32X4# :: Int32X4# -> Int# -> Int# -> Int32X4#
-insertInt32X4# = let x = x in x
+data Int8X32#
 
-packInt32X4# :: Int# -> Int# -> Int# -> Int# -> Int32X4#
+data Int16X16#
+
+data Int32X8#
+
+data Int64X4#
+
+data Int8X64#
+
+data Int16X32#
+
+data Int32X16#
+
+data Int64X8#
+
+data Word8X16#
+
+data Word16X8#
+
+data Word32X4#
+
+data Word64X2#
+
+data Word8X32#
+
+data Word16X16#
+
+data Word32X8#
+
+data Word64X4#
+
+data Word8X64#
+
+data Word16X32#
+
+data Word32X16#
+
+data Word64X8#
+
+data FloatX4#
+
+data DoubleX2#
+
+data FloatX8#
+
+data DoubleX4#
+
+data FloatX16#
+
+data DoubleX8#
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt8X16# :: Int# -> Int8X16#
+broadcastInt8X16# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt16X8# :: Int# -> Int16X8#
+broadcastInt16X8# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt32X4# :: Int# -> Int32X4#
+broadcastInt32X4# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt64X2# :: Int# -> Int64X2#
+broadcastInt64X2# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt8X32# :: Int# -> Int8X32#
+broadcastInt8X32# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt16X16# :: Int# -> Int16X16#
+broadcastInt16X16# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt32X8# :: Int# -> Int32X8#
+broadcastInt32X8# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt64X4# :: Int# -> Int64X4#
+broadcastInt64X4# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt8X64# :: Int# -> Int8X64#
+broadcastInt8X64# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt16X32# :: Int# -> Int16X32#
+broadcastInt16X32# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt32X16# :: Int# -> Int32X16#
+broadcastInt32X16# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastInt64X8# :: Int# -> Int64X8#
+broadcastInt64X8# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord8X16# :: Word# -> Word8X16#
+broadcastWord8X16# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord16X8# :: Word# -> Word16X8#
+broadcastWord16X8# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord32X4# :: Word# -> Word32X4#
+broadcastWord32X4# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord64X2# :: Word# -> Word64X2#
+broadcastWord64X2# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord8X32# :: Word# -> Word8X32#
+broadcastWord8X32# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord16X16# :: Word# -> Word16X16#
+broadcastWord16X16# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord32X8# :: Word# -> Word32X8#
+broadcastWord32X8# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord64X4# :: Word# -> Word64X4#
+broadcastWord64X4# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord8X64# :: Word# -> Word8X64#
+broadcastWord8X64# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord16X32# :: Word# -> Word16X32#
+broadcastWord16X32# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord32X16# :: Word# -> Word32X16#
+broadcastWord32X16# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastWord64X8# :: Word# -> Word64X8#
+broadcastWord64X8# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastFloatX4# :: Float# -> FloatX4#
+broadcastFloatX4# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastDoubleX2# :: Double# -> DoubleX2#
+broadcastDoubleX2# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastFloatX8# :: Float# -> FloatX8#
+broadcastFloatX8# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastDoubleX4# :: Double# -> DoubleX4#
+broadcastDoubleX4# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastFloatX16# :: Float# -> FloatX16#
+broadcastFloatX16# = let x = x in x
+
+-- | Broadcast a scalar to all elements of a vector. 
+
+broadcastDoubleX8# :: Double# -> DoubleX8#
+broadcastDoubleX8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt8X16# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int8X16#
+packInt8X16# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt16X8# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int16X8#
+packInt16X8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt32X4# :: (# Int#,Int#,Int#,Int# #) -> Int32X4#
 packInt32X4# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt64X2# :: (# Int#,Int# #) -> Int64X2#
+packInt64X2# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt8X32# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int8X32#
+packInt8X32# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt16X16# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int16X16#
+packInt16X16# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt32X8# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int32X8#
+packInt32X8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt64X4# :: (# Int#,Int#,Int#,Int# #) -> Int64X4#
+packInt64X4# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt8X64# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int8X64#
+packInt8X64# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt16X32# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int16X32#
+packInt16X32# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt32X16# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int32X16#
+packInt32X16# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packInt64X8# :: (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #) -> Int64X8#
+packInt64X8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord8X16# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word8X16#
+packWord8X16# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord16X8# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word16X8#
+packWord16X8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord32X4# :: (# Word#,Word#,Word#,Word# #) -> Word32X4#
+packWord32X4# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord64X2# :: (# Word#,Word# #) -> Word64X2#
+packWord64X2# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord8X32# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word8X32#
+packWord8X32# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord16X16# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word16X16#
+packWord16X16# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord32X8# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word32X8#
+packWord32X8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord64X4# :: (# Word#,Word#,Word#,Word# #) -> Word64X4#
+packWord64X4# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord8X64# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word8X64#
+packWord8X64# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord16X32# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word16X32#
+packWord16X32# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord32X16# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word32X16#
+packWord32X16# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packWord64X8# :: (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #) -> Word64X8#
+packWord64X8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packFloatX4# :: (# Float#,Float#,Float#,Float# #) -> FloatX4#
+packFloatX4# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packDoubleX2# :: (# Double#,Double# #) -> DoubleX2#
+packDoubleX2# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packFloatX8# :: (# Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float# #) -> FloatX8#
+packFloatX8# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packDoubleX4# :: (# Double#,Double#,Double#,Double# #) -> DoubleX4#
+packDoubleX4# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packFloatX16# :: (# Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float# #) -> FloatX16#
+packFloatX16# = let x = x in x
+
+-- | Pack the elements of an unboxed tuple into a vector. 
+
+packDoubleX8# :: (# Double#,Double#,Double#,Double#,Double#,Double#,Double#,Double# #) -> DoubleX8#
+packDoubleX8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt8X16# :: Int8X16# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt8X16# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt16X8# :: Int16X8# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt16X8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
 
 unpackInt32X4# :: Int32X4# -> (# Int#,Int#,Int#,Int# #)
 unpackInt32X4# = let x = x in x
 
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt64X2# :: Int64X2# -> (# Int#,Int# #)
+unpackInt64X2# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt8X32# :: Int8X32# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt8X32# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt16X16# :: Int16X16# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt16X16# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt32X8# :: Int32X8# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt32X8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt64X4# :: Int64X4# -> (# Int#,Int#,Int#,Int# #)
+unpackInt64X4# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt8X64# :: Int8X64# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt8X64# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt16X32# :: Int16X32# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt16X32# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt32X16# :: Int32X16# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt32X16# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackInt64X8# :: Int64X8# -> (# Int#,Int#,Int#,Int#,Int#,Int#,Int#,Int# #)
+unpackInt64X8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord8X16# :: Word8X16# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord8X16# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord16X8# :: Word16X8# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord16X8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord32X4# :: Word32X4# -> (# Word#,Word#,Word#,Word# #)
+unpackWord32X4# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord64X2# :: Word64X2# -> (# Word#,Word# #)
+unpackWord64X2# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord8X32# :: Word8X32# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord8X32# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord16X16# :: Word16X16# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord16X16# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord32X8# :: Word32X8# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord32X8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord64X4# :: Word64X4# -> (# Word#,Word#,Word#,Word# #)
+unpackWord64X4# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord8X64# :: Word8X64# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord8X64# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord16X32# :: Word16X32# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord16X32# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord32X16# :: Word32X16# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord32X16# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackWord64X8# :: Word64X8# -> (# Word#,Word#,Word#,Word#,Word#,Word#,Word#,Word# #)
+unpackWord64X8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackFloatX4# :: FloatX4# -> (# Float#,Float#,Float#,Float# #)
+unpackFloatX4# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackDoubleX2# :: DoubleX2# -> (# Double#,Double# #)
+unpackDoubleX2# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackFloatX8# :: FloatX8# -> (# Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float# #)
+unpackFloatX8# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackDoubleX4# :: DoubleX4# -> (# Double#,Double#,Double#,Double# #)
+unpackDoubleX4# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackFloatX16# :: FloatX16# -> (# Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float#,Float# #)
+unpackFloatX16# = let x = x in x
+
+-- | Unpack the elements of a vector into an unboxed tuple. #
+
+unpackDoubleX8# :: DoubleX8# -> (# Double#,Double#,Double#,Double#,Double#,Double#,Double#,Double# #)
+unpackDoubleX8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt8X16# :: Int8X16# -> Int# -> Int# -> Int8X16#
+insertInt8X16# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt16X8# :: Int16X8# -> Int# -> Int# -> Int16X8#
+insertInt16X8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt32X4# :: Int32X4# -> Int# -> Int# -> Int32X4#
+insertInt32X4# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt64X2# :: Int64X2# -> Int# -> Int# -> Int64X2#
+insertInt64X2# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt8X32# :: Int8X32# -> Int# -> Int# -> Int8X32#
+insertInt8X32# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt16X16# :: Int16X16# -> Int# -> Int# -> Int16X16#
+insertInt16X16# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt32X8# :: Int32X8# -> Int# -> Int# -> Int32X8#
+insertInt32X8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt64X4# :: Int64X4# -> Int# -> Int# -> Int64X4#
+insertInt64X4# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt8X64# :: Int8X64# -> Int# -> Int# -> Int8X64#
+insertInt8X64# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt16X32# :: Int16X32# -> Int# -> Int# -> Int16X32#
+insertInt16X32# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt32X16# :: Int32X16# -> Int# -> Int# -> Int32X16#
+insertInt32X16# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertInt64X8# :: Int64X8# -> Int# -> Int# -> Int64X8#
+insertInt64X8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord8X16# :: Word8X16# -> Word# -> Int# -> Word8X16#
+insertWord8X16# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord16X8# :: Word16X8# -> Word# -> Int# -> Word16X8#
+insertWord16X8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord32X4# :: Word32X4# -> Word# -> Int# -> Word32X4#
+insertWord32X4# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord64X2# :: Word64X2# -> Word# -> Int# -> Word64X2#
+insertWord64X2# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord8X32# :: Word8X32# -> Word# -> Int# -> Word8X32#
+insertWord8X32# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord16X16# :: Word16X16# -> Word# -> Int# -> Word16X16#
+insertWord16X16# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord32X8# :: Word32X8# -> Word# -> Int# -> Word32X8#
+insertWord32X8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord64X4# :: Word64X4# -> Word# -> Int# -> Word64X4#
+insertWord64X4# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord8X64# :: Word8X64# -> Word# -> Int# -> Word8X64#
+insertWord8X64# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord16X32# :: Word16X32# -> Word# -> Int# -> Word16X32#
+insertWord16X32# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord32X16# :: Word32X16# -> Word# -> Int# -> Word32X16#
+insertWord32X16# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertWord64X8# :: Word64X8# -> Word# -> Int# -> Word64X8#
+insertWord64X8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertFloatX4# :: FloatX4# -> Float# -> Int# -> FloatX4#
+insertFloatX4# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertDoubleX2# :: DoubleX2# -> Double# -> Int# -> DoubleX2#
+insertDoubleX2# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertFloatX8# :: FloatX8# -> Float# -> Int# -> FloatX8#
+insertFloatX8# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertDoubleX4# :: DoubleX4# -> Double# -> Int# -> DoubleX4#
+insertDoubleX4# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertFloatX16# :: FloatX16# -> Float# -> Int# -> FloatX16#
+insertFloatX16# = let x = x in x
+
+-- | Insert a scalar at the given position in a vector. 
+
+insertDoubleX8# :: DoubleX8# -> Double# -> Int# -> DoubleX8#
+insertDoubleX8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt8X16# :: Int8X16# -> Int8X16# -> Int8X16#
+plusInt8X16# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt16X8# :: Int16X8# -> Int16X8# -> Int16X8#
+plusInt16X8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
 plusInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
 plusInt32X4# = let x = x in x
 
-minusInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
-minusInt32X4# = let x = x in x
-
-timesInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
-timesInt32X4# = let x = x in x
-
-quotInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
-quotInt32X4# = let x = x in x
-
-remInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
-remInt32X4# = let x = x in x
-
-negateInt32X4# :: Int32X4# -> Int32X4#
-negateInt32X4# = let x = x in x
-
-indexInt32X4Array# :: ByteArray# -> Int# -> Int32X4#
-indexInt32X4Array# = let x = x in x
-
-readInt32X4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X4# #)
-readInt32X4Array# = let x = x in x
-
-writeInt32X4Array# :: MutableByteArray# s -> Int# -> Int32X4# -> State# s -> State# s
-writeInt32X4Array# = let x = x in x
-
-indexInt32X4OffAddr# :: Addr# -> Int# -> Int32X4#
-indexInt32X4OffAddr# = let x = x in x
-
-readInt32X4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int32X4# #)
-readInt32X4OffAddr# = let x = x in x
-
-writeInt32X4OffAddr# :: Addr# -> Int# -> Int32X4# -> State# s -> State# s
-writeInt32X4OffAddr# = let x = x in x
-
-indexInt32ArrayAsInt32X4# :: ByteArray# -> Int# -> Int32X4#
-indexInt32ArrayAsInt32X4# = let x = x in x
-
-readInt32ArrayAsInt32X4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X4# #)
-readInt32ArrayAsInt32X4# = let x = x in x
-
-writeInt32ArrayAsInt32X4# :: MutableByteArray# s -> Int# -> Int32X4# -> State# s -> State# s
-writeInt32ArrayAsInt32X4# = let x = x in x
-
-indexInt32OffAddrAsInt32X4# :: Addr# -> Int# -> Int32X4#
-indexInt32OffAddrAsInt32X4# = let x = x in x
-
-readInt32OffAddrAsInt32X4# :: Addr# -> Int# -> State# s -> (# State# s,Int32X4# #)
-readInt32OffAddrAsInt32X4# = let x = x in x
-
-writeInt32OffAddrAsInt32X4# :: Addr# -> Int# -> Int32X4# -> State# s -> State# s
-writeInt32OffAddrAsInt32X4# = let x = x in x
-
-data Int64X2#
-
-int64ToInt64X2# :: Int64# -> Int64X2#
-int64ToInt64X2# = let x = x in x
-
-insertInt64X2# :: Int64X2# -> Int64# -> Int# -> Int64X2#
-insertInt64X2# = let x = x in x
-
-packInt64X2# :: Int64# -> Int64# -> Int64X2#
-packInt64X2# = let x = x in x
-
-unpackInt64X2# :: Int64X2# -> (# Int64#,Int64# #)
-unpackInt64X2# = let x = x in x
+-- | Add two vectors element-wise. 
 
 plusInt64X2# :: Int64X2# -> Int64X2# -> Int64X2#
 plusInt64X2# = let x = x in x
 
+-- | Add two vectors element-wise. 
+
+plusInt8X32# :: Int8X32# -> Int8X32# -> Int8X32#
+plusInt8X32# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt16X16# :: Int16X16# -> Int16X16# -> Int16X16#
+plusInt16X16# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt32X8# :: Int32X8# -> Int32X8# -> Int32X8#
+plusInt32X8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt64X4# :: Int64X4# -> Int64X4# -> Int64X4#
+plusInt64X4# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt8X64# :: Int8X64# -> Int8X64# -> Int8X64#
+plusInt8X64# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt16X32# :: Int16X32# -> Int16X32# -> Int16X32#
+plusInt16X32# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt32X16# :: Int32X16# -> Int32X16# -> Int32X16#
+plusInt32X16# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusInt64X8# :: Int64X8# -> Int64X8# -> Int64X8#
+plusInt64X8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord8X16# :: Word8X16# -> Word8X16# -> Word8X16#
+plusWord8X16# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord16X8# :: Word16X8# -> Word16X8# -> Word16X8#
+plusWord16X8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord32X4# :: Word32X4# -> Word32X4# -> Word32X4#
+plusWord32X4# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord64X2# :: Word64X2# -> Word64X2# -> Word64X2#
+plusWord64X2# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord8X32# :: Word8X32# -> Word8X32# -> Word8X32#
+plusWord8X32# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord16X16# :: Word16X16# -> Word16X16# -> Word16X16#
+plusWord16X16# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord32X8# :: Word32X8# -> Word32X8# -> Word32X8#
+plusWord32X8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord64X4# :: Word64X4# -> Word64X4# -> Word64X4#
+plusWord64X4# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord8X64# :: Word8X64# -> Word8X64# -> Word8X64#
+plusWord8X64# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord16X32# :: Word16X32# -> Word16X32# -> Word16X32#
+plusWord16X32# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord32X16# :: Word32X16# -> Word32X16# -> Word32X16#
+plusWord32X16# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusWord64X8# :: Word64X8# -> Word64X8# -> Word64X8#
+plusWord64X8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
+plusFloatX4# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
+plusDoubleX2# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusFloatX8# :: FloatX8# -> FloatX8# -> FloatX8#
+plusFloatX8# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusDoubleX4# :: DoubleX4# -> DoubleX4# -> DoubleX4#
+plusDoubleX4# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusFloatX16# :: FloatX16# -> FloatX16# -> FloatX16#
+plusFloatX16# = let x = x in x
+
+-- | Add two vectors element-wise. 
+
+plusDoubleX8# :: DoubleX8# -> DoubleX8# -> DoubleX8#
+plusDoubleX8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt8X16# :: Int8X16# -> Int8X16# -> Int8X16#
+minusInt8X16# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt16X8# :: Int16X8# -> Int16X8# -> Int16X8#
+minusInt16X8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
+minusInt32X4# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
 minusInt64X2# :: Int64X2# -> Int64X2# -> Int64X2#
 minusInt64X2# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt8X32# :: Int8X32# -> Int8X32# -> Int8X32#
+minusInt8X32# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt16X16# :: Int16X16# -> Int16X16# -> Int16X16#
+minusInt16X16# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt32X8# :: Int32X8# -> Int32X8# -> Int32X8#
+minusInt32X8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt64X4# :: Int64X4# -> Int64X4# -> Int64X4#
+minusInt64X4# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt8X64# :: Int8X64# -> Int8X64# -> Int8X64#
+minusInt8X64# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt16X32# :: Int16X32# -> Int16X32# -> Int16X32#
+minusInt16X32# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt32X16# :: Int32X16# -> Int32X16# -> Int32X16#
+minusInt32X16# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusInt64X8# :: Int64X8# -> Int64X8# -> Int64X8#
+minusInt64X8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord8X16# :: Word8X16# -> Word8X16# -> Word8X16#
+minusWord8X16# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord16X8# :: Word16X8# -> Word16X8# -> Word16X8#
+minusWord16X8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord32X4# :: Word32X4# -> Word32X4# -> Word32X4#
+minusWord32X4# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord64X2# :: Word64X2# -> Word64X2# -> Word64X2#
+minusWord64X2# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord8X32# :: Word8X32# -> Word8X32# -> Word8X32#
+minusWord8X32# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord16X16# :: Word16X16# -> Word16X16# -> Word16X16#
+minusWord16X16# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord32X8# :: Word32X8# -> Word32X8# -> Word32X8#
+minusWord32X8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord64X4# :: Word64X4# -> Word64X4# -> Word64X4#
+minusWord64X4# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord8X64# :: Word8X64# -> Word8X64# -> Word8X64#
+minusWord8X64# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord16X32# :: Word16X32# -> Word16X32# -> Word16X32#
+minusWord16X32# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord32X16# :: Word32X16# -> Word32X16# -> Word32X16#
+minusWord32X16# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusWord64X8# :: Word64X8# -> Word64X8# -> Word64X8#
+minusWord64X8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
+minusFloatX4# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
+minusDoubleX2# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusFloatX8# :: FloatX8# -> FloatX8# -> FloatX8#
+minusFloatX8# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusDoubleX4# :: DoubleX4# -> DoubleX4# -> DoubleX4#
+minusDoubleX4# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusFloatX16# :: FloatX16# -> FloatX16# -> FloatX16#
+minusFloatX16# = let x = x in x
+
+-- | Subtract two vectors element-wise. 
+
+minusDoubleX8# :: DoubleX8# -> DoubleX8# -> DoubleX8#
+minusDoubleX8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt8X16# :: Int8X16# -> Int8X16# -> Int8X16#
+timesInt8X16# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt16X8# :: Int16X8# -> Int16X8# -> Int16X8#
+timesInt16X8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
+timesInt32X4# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
 
 timesInt64X2# :: Int64X2# -> Int64X2# -> Int64X2#
 timesInt64X2# = let x = x in x
 
+-- | Multiply two vectors element-wise. 
+
+timesInt8X32# :: Int8X32# -> Int8X32# -> Int8X32#
+timesInt8X32# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt16X16# :: Int16X16# -> Int16X16# -> Int16X16#
+timesInt16X16# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt32X8# :: Int32X8# -> Int32X8# -> Int32X8#
+timesInt32X8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt64X4# :: Int64X4# -> Int64X4# -> Int64X4#
+timesInt64X4# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt8X64# :: Int8X64# -> Int8X64# -> Int8X64#
+timesInt8X64# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt16X32# :: Int16X32# -> Int16X32# -> Int16X32#
+timesInt16X32# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt32X16# :: Int32X16# -> Int32X16# -> Int32X16#
+timesInt32X16# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesInt64X8# :: Int64X8# -> Int64X8# -> Int64X8#
+timesInt64X8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord8X16# :: Word8X16# -> Word8X16# -> Word8X16#
+timesWord8X16# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord16X8# :: Word16X8# -> Word16X8# -> Word16X8#
+timesWord16X8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord32X4# :: Word32X4# -> Word32X4# -> Word32X4#
+timesWord32X4# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord64X2# :: Word64X2# -> Word64X2# -> Word64X2#
+timesWord64X2# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord8X32# :: Word8X32# -> Word8X32# -> Word8X32#
+timesWord8X32# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord16X16# :: Word16X16# -> Word16X16# -> Word16X16#
+timesWord16X16# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord32X8# :: Word32X8# -> Word32X8# -> Word32X8#
+timesWord32X8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord64X4# :: Word64X4# -> Word64X4# -> Word64X4#
+timesWord64X4# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord8X64# :: Word8X64# -> Word8X64# -> Word8X64#
+timesWord8X64# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord16X32# :: Word16X32# -> Word16X32# -> Word16X32#
+timesWord16X32# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord32X16# :: Word32X16# -> Word32X16# -> Word32X16#
+timesWord32X16# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesWord64X8# :: Word64X8# -> Word64X8# -> Word64X8#
+timesWord64X8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
+timesFloatX4# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
+timesDoubleX2# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesFloatX8# :: FloatX8# -> FloatX8# -> FloatX8#
+timesFloatX8# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesDoubleX4# :: DoubleX4# -> DoubleX4# -> DoubleX4#
+timesDoubleX4# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesFloatX16# :: FloatX16# -> FloatX16# -> FloatX16#
+timesFloatX16# = let x = x in x
+
+-- | Multiply two vectors element-wise. 
+
+timesDoubleX8# :: DoubleX8# -> DoubleX8# -> DoubleX8#
+timesDoubleX8# = let x = x in x
+
+-- | Divide two vectors element-wise. 
+
+divideFloatX4# :: FloatX4# -> FloatX4# -> FloatX4#
+divideFloatX4# = let x = x in x
+
+-- | Divide two vectors element-wise. 
+
+divideDoubleX2# :: DoubleX2# -> DoubleX2# -> DoubleX2#
+divideDoubleX2# = let x = x in x
+
+-- | Divide two vectors element-wise. 
+
+divideFloatX8# :: FloatX8# -> FloatX8# -> FloatX8#
+divideFloatX8# = let x = x in x
+
+-- | Divide two vectors element-wise. 
+
+divideDoubleX4# :: DoubleX4# -> DoubleX4# -> DoubleX4#
+divideDoubleX4# = let x = x in x
+
+-- | Divide two vectors element-wise. 
+
+divideFloatX16# :: FloatX16# -> FloatX16# -> FloatX16#
+divideFloatX16# = let x = x in x
+
+-- | Divide two vectors element-wise. 
+
+divideDoubleX8# :: DoubleX8# -> DoubleX8# -> DoubleX8#
+divideDoubleX8# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt8X16# :: Int8X16# -> Int8X16# -> Int8X16#
+quotInt8X16# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt16X8# :: Int16X8# -> Int16X8# -> Int16X8#
+quotInt16X8# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
+quotInt32X4# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
 quotInt64X2# :: Int64X2# -> Int64X2# -> Int64X2#
 quotInt64X2# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt8X32# :: Int8X32# -> Int8X32# -> Int8X32#
+quotInt8X32# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt16X16# :: Int16X16# -> Int16X16# -> Int16X16#
+quotInt16X16# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt32X8# :: Int32X8# -> Int32X8# -> Int32X8#
+quotInt32X8# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt64X4# :: Int64X4# -> Int64X4# -> Int64X4#
+quotInt64X4# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt8X64# :: Int8X64# -> Int8X64# -> Int8X64#
+quotInt8X64# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt16X32# :: Int16X32# -> Int16X32# -> Int16X32#
+quotInt16X32# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt32X16# :: Int32X16# -> Int32X16# -> Int32X16#
+quotInt32X16# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotInt64X8# :: Int64X8# -> Int64X8# -> Int64X8#
+quotInt64X8# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord8X16# :: Word8X16# -> Word8X16# -> Word8X16#
+quotWord8X16# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord16X8# :: Word16X8# -> Word16X8# -> Word16X8#
+quotWord16X8# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord32X4# :: Word32X4# -> Word32X4# -> Word32X4#
+quotWord32X4# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord64X2# :: Word64X2# -> Word64X2# -> Word64X2#
+quotWord64X2# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord8X32# :: Word8X32# -> Word8X32# -> Word8X32#
+quotWord8X32# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord16X16# :: Word16X16# -> Word16X16# -> Word16X16#
+quotWord16X16# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord32X8# :: Word32X8# -> Word32X8# -> Word32X8#
+quotWord32X8# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord64X4# :: Word64X4# -> Word64X4# -> Word64X4#
+quotWord64X4# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord8X64# :: Word8X64# -> Word8X64# -> Word8X64#
+quotWord8X64# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord16X32# :: Word16X32# -> Word16X32# -> Word16X32#
+quotWord16X32# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord32X16# :: Word32X16# -> Word32X16# -> Word32X16#
+quotWord32X16# = let x = x in x
+
+-- | Rounds towards zero element-wise. 
+
+quotWord64X8# :: Word64X8# -> Word64X8# -> Word64X8#
+quotWord64X8# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt8X16# :: Int8X16# -> Int8X16# -> Int8X16#
+remInt8X16# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt16X8# :: Int16X8# -> Int16X8# -> Int16X8#
+remInt16X8# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt32X4# :: Int32X4# -> Int32X4# -> Int32X4#
+remInt32X4# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
 
 remInt64X2# :: Int64X2# -> Int64X2# -> Int64X2#
 remInt64X2# = let x = x in x
 
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt8X32# :: Int8X32# -> Int8X32# -> Int8X32#
+remInt8X32# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt16X16# :: Int16X16# -> Int16X16# -> Int16X16#
+remInt16X16# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt32X8# :: Int32X8# -> Int32X8# -> Int32X8#
+remInt32X8# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt64X4# :: Int64X4# -> Int64X4# -> Int64X4#
+remInt64X4# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt8X64# :: Int8X64# -> Int8X64# -> Int8X64#
+remInt8X64# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt16X32# :: Int16X32# -> Int16X32# -> Int16X32#
+remInt16X32# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt32X16# :: Int32X16# -> Int32X16# -> Int32X16#
+remInt32X16# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remInt64X8# :: Int64X8# -> Int64X8# -> Int64X8#
+remInt64X8# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord8X16# :: Word8X16# -> Word8X16# -> Word8X16#
+remWord8X16# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord16X8# :: Word16X8# -> Word16X8# -> Word16X8#
+remWord16X8# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord32X4# :: Word32X4# -> Word32X4# -> Word32X4#
+remWord32X4# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord64X2# :: Word64X2# -> Word64X2# -> Word64X2#
+remWord64X2# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord8X32# :: Word8X32# -> Word8X32# -> Word8X32#
+remWord8X32# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord16X16# :: Word16X16# -> Word16X16# -> Word16X16#
+remWord16X16# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord32X8# :: Word32X8# -> Word32X8# -> Word32X8#
+remWord32X8# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord64X4# :: Word64X4# -> Word64X4# -> Word64X4#
+remWord64X4# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord8X64# :: Word8X64# -> Word8X64# -> Word8X64#
+remWord8X64# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord16X32# :: Word16X32# -> Word16X32# -> Word16X32#
+remWord16X32# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord32X16# :: Word32X16# -> Word32X16# -> Word32X16#
+remWord32X16# = let x = x in x
+
+-- | Satisfies @(quot\# x y) times\# y plus\# (rem\# x y) == x@. 
+
+remWord64X8# :: Word64X8# -> Word64X8# -> Word64X8#
+remWord64X8# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt8X16# :: Int8X16# -> Int8X16#
+negateInt8X16# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt16X8# :: Int16X8# -> Int16X8#
+negateInt16X8# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt32X4# :: Int32X4# -> Int32X4#
+negateInt32X4# = let x = x in x
+
+-- | Negate element-wise. 
+
 negateInt64X2# :: Int64X2# -> Int64X2#
 negateInt64X2# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt8X32# :: Int8X32# -> Int8X32#
+negateInt8X32# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt16X16# :: Int16X16# -> Int16X16#
+negateInt16X16# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt32X8# :: Int32X8# -> Int32X8#
+negateInt32X8# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt64X4# :: Int64X4# -> Int64X4#
+negateInt64X4# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt8X64# :: Int8X64# -> Int8X64#
+negateInt8X64# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt16X32# :: Int16X32# -> Int16X32#
+negateInt16X32# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt32X16# :: Int32X16# -> Int32X16#
+negateInt32X16# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateInt64X8# :: Int64X8# -> Int64X8#
+negateInt64X8# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateFloatX4# :: FloatX4# -> FloatX4#
+negateFloatX4# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateDoubleX2# :: DoubleX2# -> DoubleX2#
+negateDoubleX2# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateFloatX8# :: FloatX8# -> FloatX8#
+negateFloatX8# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateDoubleX4# :: DoubleX4# -> DoubleX4#
+negateDoubleX4# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateFloatX16# :: FloatX16# -> FloatX16#
+negateFloatX16# = let x = x in x
+
+-- | Negate element-wise. 
+
+negateDoubleX8# :: DoubleX8# -> DoubleX8#
+negateDoubleX8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt8X16Array# :: ByteArray# -> Int# -> Int8X16#
+indexInt8X16Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt16X8Array# :: ByteArray# -> Int# -> Int16X8#
+indexInt16X8Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt32X4Array# :: ByteArray# -> Int# -> Int32X4#
+indexInt32X4Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
 
 indexInt64X2Array# :: ByteArray# -> Int# -> Int64X2#
 indexInt64X2Array# = let x = x in x
 
+-- | Read a vector from specified index of immutable array. 
+
+indexInt8X32Array# :: ByteArray# -> Int# -> Int8X32#
+indexInt8X32Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt16X16Array# :: ByteArray# -> Int# -> Int16X16#
+indexInt16X16Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt32X8Array# :: ByteArray# -> Int# -> Int32X8#
+indexInt32X8Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt64X4Array# :: ByteArray# -> Int# -> Int64X4#
+indexInt64X4Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt8X64Array# :: ByteArray# -> Int# -> Int8X64#
+indexInt8X64Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt16X32Array# :: ByteArray# -> Int# -> Int16X32#
+indexInt16X32Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt32X16Array# :: ByteArray# -> Int# -> Int32X16#
+indexInt32X16Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexInt64X8Array# :: ByteArray# -> Int# -> Int64X8#
+indexInt64X8Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord8X16Array# :: ByteArray# -> Int# -> Word8X16#
+indexWord8X16Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord16X8Array# :: ByteArray# -> Int# -> Word16X8#
+indexWord16X8Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord32X4Array# :: ByteArray# -> Int# -> Word32X4#
+indexWord32X4Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord64X2Array# :: ByteArray# -> Int# -> Word64X2#
+indexWord64X2Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord8X32Array# :: ByteArray# -> Int# -> Word8X32#
+indexWord8X32Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord16X16Array# :: ByteArray# -> Int# -> Word16X16#
+indexWord16X16Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord32X8Array# :: ByteArray# -> Int# -> Word32X8#
+indexWord32X8Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord64X4Array# :: ByteArray# -> Int# -> Word64X4#
+indexWord64X4Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord8X64Array# :: ByteArray# -> Int# -> Word8X64#
+indexWord8X64Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord16X32Array# :: ByteArray# -> Int# -> Word16X32#
+indexWord16X32Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord32X16Array# :: ByteArray# -> Int# -> Word32X16#
+indexWord32X16Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexWord64X8Array# :: ByteArray# -> Int# -> Word64X8#
+indexWord64X8Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexFloatX4Array# :: ByteArray# -> Int# -> FloatX4#
+indexFloatX4Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexDoubleX2Array# :: ByteArray# -> Int# -> DoubleX2#
+indexDoubleX2Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexFloatX8Array# :: ByteArray# -> Int# -> FloatX8#
+indexFloatX8Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexDoubleX4Array# :: ByteArray# -> Int# -> DoubleX4#
+indexDoubleX4Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexFloatX16Array# :: ByteArray# -> Int# -> FloatX16#
+indexFloatX16Array# = let x = x in x
+
+-- | Read a vector from specified index of immutable array. 
+
+indexDoubleX8Array# :: ByteArray# -> Int# -> DoubleX8#
+indexDoubleX8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt8X16Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int8X16# #)
+readInt8X16Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt16X8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int16X8# #)
+readInt16X8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt32X4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X4# #)
+readInt32X4Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
 readInt64X2Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int64X2# #)
 readInt64X2Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt8X32Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int8X32# #)
+readInt8X32Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt16X16Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int16X16# #)
+readInt16X16Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt32X8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X8# #)
+readInt32X8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt64X4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int64X4# #)
+readInt64X4Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt8X64Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int8X64# #)
+readInt8X64Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt16X32Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int16X32# #)
+readInt16X32Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt32X16Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X16# #)
+readInt32X16Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readInt64X8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int64X8# #)
+readInt64X8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord8X16Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word8X16# #)
+readWord8X16Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord16X8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word16X8# #)
+readWord16X8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord32X4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word32X4# #)
+readWord32X4Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord64X2Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word64X2# #)
+readWord64X2Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord8X32Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word8X32# #)
+readWord8X32Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord16X16Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word16X16# #)
+readWord16X16Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord32X8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word32X8# #)
+readWord32X8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord64X4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word64X4# #)
+readWord64X4Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord8X64Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word8X64# #)
+readWord8X64Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord16X32Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word16X32# #)
+readWord16X32Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord32X16Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word32X16# #)
+readWord32X16Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readWord64X8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word64X8# #)
+readWord64X8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readFloatX4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX4# #)
+readFloatX4Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readDoubleX2Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX2# #)
+readDoubleX2Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readFloatX8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX8# #)
+readFloatX8Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readDoubleX4Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX4# #)
+readDoubleX4Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readFloatX16Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX16# #)
+readFloatX16Array# = let x = x in x
+
+-- | Read a vector from specified index of mutable array. 
+
+readDoubleX8Array# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX8# #)
+readDoubleX8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt8X16Array# :: MutableByteArray# s -> Int# -> Int8X16# -> State# s -> State# s
+writeInt8X16Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt16X8Array# :: MutableByteArray# s -> Int# -> Int16X8# -> State# s -> State# s
+writeInt16X8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt32X4Array# :: MutableByteArray# s -> Int# -> Int32X4# -> State# s -> State# s
+writeInt32X4Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
 
 writeInt64X2Array# :: MutableByteArray# s -> Int# -> Int64X2# -> State# s -> State# s
 writeInt64X2Array# = let x = x in x
 
+-- | Write a vector to specified index of mutable array. 
+
+writeInt8X32Array# :: MutableByteArray# s -> Int# -> Int8X32# -> State# s -> State# s
+writeInt8X32Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt16X16Array# :: MutableByteArray# s -> Int# -> Int16X16# -> State# s -> State# s
+writeInt16X16Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt32X8Array# :: MutableByteArray# s -> Int# -> Int32X8# -> State# s -> State# s
+writeInt32X8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt64X4Array# :: MutableByteArray# s -> Int# -> Int64X4# -> State# s -> State# s
+writeInt64X4Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt8X64Array# :: MutableByteArray# s -> Int# -> Int8X64# -> State# s -> State# s
+writeInt8X64Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt16X32Array# :: MutableByteArray# s -> Int# -> Int16X32# -> State# s -> State# s
+writeInt16X32Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt32X16Array# :: MutableByteArray# s -> Int# -> Int32X16# -> State# s -> State# s
+writeInt32X16Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeInt64X8Array# :: MutableByteArray# s -> Int# -> Int64X8# -> State# s -> State# s
+writeInt64X8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord8X16Array# :: MutableByteArray# s -> Int# -> Word8X16# -> State# s -> State# s
+writeWord8X16Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord16X8Array# :: MutableByteArray# s -> Int# -> Word16X8# -> State# s -> State# s
+writeWord16X8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord32X4Array# :: MutableByteArray# s -> Int# -> Word32X4# -> State# s -> State# s
+writeWord32X4Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord64X2Array# :: MutableByteArray# s -> Int# -> Word64X2# -> State# s -> State# s
+writeWord64X2Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord8X32Array# :: MutableByteArray# s -> Int# -> Word8X32# -> State# s -> State# s
+writeWord8X32Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord16X16Array# :: MutableByteArray# s -> Int# -> Word16X16# -> State# s -> State# s
+writeWord16X16Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord32X8Array# :: MutableByteArray# s -> Int# -> Word32X8# -> State# s -> State# s
+writeWord32X8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord64X4Array# :: MutableByteArray# s -> Int# -> Word64X4# -> State# s -> State# s
+writeWord64X4Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord8X64Array# :: MutableByteArray# s -> Int# -> Word8X64# -> State# s -> State# s
+writeWord8X64Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord16X32Array# :: MutableByteArray# s -> Int# -> Word16X32# -> State# s -> State# s
+writeWord16X32Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord32X16Array# :: MutableByteArray# s -> Int# -> Word32X16# -> State# s -> State# s
+writeWord32X16Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeWord64X8Array# :: MutableByteArray# s -> Int# -> Word64X8# -> State# s -> State# s
+writeWord64X8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeFloatX4Array# :: MutableByteArray# s -> Int# -> FloatX4# -> State# s -> State# s
+writeFloatX4Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeDoubleX2Array# :: MutableByteArray# s -> Int# -> DoubleX2# -> State# s -> State# s
+writeDoubleX2Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeFloatX8Array# :: MutableByteArray# s -> Int# -> FloatX8# -> State# s -> State# s
+writeFloatX8Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeDoubleX4Array# :: MutableByteArray# s -> Int# -> DoubleX4# -> State# s -> State# s
+writeDoubleX4Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeFloatX16Array# :: MutableByteArray# s -> Int# -> FloatX16# -> State# s -> State# s
+writeFloatX16Array# = let x = x in x
+
+-- | Write a vector to specified index of mutable array. 
+
+writeDoubleX8Array# :: MutableByteArray# s -> Int# -> DoubleX8# -> State# s -> State# s
+writeDoubleX8Array# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt8X16OffAddr# :: Addr# -> Int# -> Int8X16#
+indexInt8X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt16X8OffAddr# :: Addr# -> Int# -> Int16X8#
+indexInt16X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt32X4OffAddr# :: Addr# -> Int# -> Int32X4#
+indexInt32X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
 indexInt64X2OffAddr# :: Addr# -> Int# -> Int64X2#
 indexInt64X2OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt8X32OffAddr# :: Addr# -> Int# -> Int8X32#
+indexInt8X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt16X16OffAddr# :: Addr# -> Int# -> Int16X16#
+indexInt16X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt32X8OffAddr# :: Addr# -> Int# -> Int32X8#
+indexInt32X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt64X4OffAddr# :: Addr# -> Int# -> Int64X4#
+indexInt64X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt8X64OffAddr# :: Addr# -> Int# -> Int8X64#
+indexInt8X64OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt16X32OffAddr# :: Addr# -> Int# -> Int16X32#
+indexInt16X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt32X16OffAddr# :: Addr# -> Int# -> Int32X16#
+indexInt32X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexInt64X8OffAddr# :: Addr# -> Int# -> Int64X8#
+indexInt64X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord8X16OffAddr# :: Addr# -> Int# -> Word8X16#
+indexWord8X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord16X8OffAddr# :: Addr# -> Int# -> Word16X8#
+indexWord16X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord32X4OffAddr# :: Addr# -> Int# -> Word32X4#
+indexWord32X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord64X2OffAddr# :: Addr# -> Int# -> Word64X2#
+indexWord64X2OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord8X32OffAddr# :: Addr# -> Int# -> Word8X32#
+indexWord8X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord16X16OffAddr# :: Addr# -> Int# -> Word16X16#
+indexWord16X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord32X8OffAddr# :: Addr# -> Int# -> Word32X8#
+indexWord32X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord64X4OffAddr# :: Addr# -> Int# -> Word64X4#
+indexWord64X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord8X64OffAddr# :: Addr# -> Int# -> Word8X64#
+indexWord8X64OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord16X32OffAddr# :: Addr# -> Int# -> Word16X32#
+indexWord16X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord32X16OffAddr# :: Addr# -> Int# -> Word32X16#
+indexWord32X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexWord64X8OffAddr# :: Addr# -> Int# -> Word64X8#
+indexWord64X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexFloatX4OffAddr# :: Addr# -> Int# -> FloatX4#
+indexFloatX4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexDoubleX2OffAddr# :: Addr# -> Int# -> DoubleX2#
+indexDoubleX2OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexFloatX8OffAddr# :: Addr# -> Int# -> FloatX8#
+indexFloatX8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexDoubleX4OffAddr# :: Addr# -> Int# -> DoubleX4#
+indexDoubleX4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexFloatX16OffAddr# :: Addr# -> Int# -> FloatX16#
+indexFloatX16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+indexDoubleX8OffAddr# :: Addr# -> Int# -> DoubleX8#
+indexDoubleX8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt8X16OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int8X16# #)
+readInt8X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt16X8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int16X8# #)
+readInt16X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt32X4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int32X4# #)
+readInt32X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
 
 readInt64X2OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int64X2# #)
 readInt64X2OffAddr# = let x = x in x
 
+-- | Reads vector; offset in bytes. 
+
+readInt8X32OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int8X32# #)
+readInt8X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt16X16OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int16X16# #)
+readInt16X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt32X8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int32X8# #)
+readInt32X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt64X4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int64X4# #)
+readInt64X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt8X64OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int8X64# #)
+readInt8X64OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt16X32OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int16X32# #)
+readInt16X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt32X16OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int32X16# #)
+readInt32X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readInt64X8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Int64X8# #)
+readInt64X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord8X16OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word8X16# #)
+readWord8X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord16X8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word16X8# #)
+readWord16X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord32X4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word32X4# #)
+readWord32X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord64X2OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word64X2# #)
+readWord64X2OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord8X32OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word8X32# #)
+readWord8X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord16X16OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word16X16# #)
+readWord16X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord32X8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word32X8# #)
+readWord32X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord64X4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word64X4# #)
+readWord64X4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord8X64OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word8X64# #)
+readWord8X64OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord16X32OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word16X32# #)
+readWord16X32OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord32X16OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word32X16# #)
+readWord32X16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readWord64X8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,Word64X8# #)
+readWord64X8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readFloatX4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,FloatX4# #)
+readFloatX4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readDoubleX2OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX2# #)
+readDoubleX2OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readFloatX8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,FloatX8# #)
+readFloatX8OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readDoubleX4OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX4# #)
+readDoubleX4OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readFloatX16OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,FloatX16# #)
+readFloatX16OffAddr# = let x = x in x
+
+-- | Reads vector; offset in bytes. 
+
+readDoubleX8OffAddr# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX8# #)
+readDoubleX8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt8X16OffAddr# :: Addr# -> Int# -> Int8X16# -> State# s -> State# s
+writeInt8X16OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt16X8OffAddr# :: Addr# -> Int# -> Int16X8# -> State# s -> State# s
+writeInt16X8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt32X4OffAddr# :: Addr# -> Int# -> Int32X4# -> State# s -> State# s
+writeInt32X4OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
 writeInt64X2OffAddr# :: Addr# -> Int# -> Int64X2# -> State# s -> State# s
 writeInt64X2OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt8X32OffAddr# :: Addr# -> Int# -> Int8X32# -> State# s -> State# s
+writeInt8X32OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt16X16OffAddr# :: Addr# -> Int# -> Int16X16# -> State# s -> State# s
+writeInt16X16OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt32X8OffAddr# :: Addr# -> Int# -> Int32X8# -> State# s -> State# s
+writeInt32X8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt64X4OffAddr# :: Addr# -> Int# -> Int64X4# -> State# s -> State# s
+writeInt64X4OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt8X64OffAddr# :: Addr# -> Int# -> Int8X64# -> State# s -> State# s
+writeInt8X64OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt16X32OffAddr# :: Addr# -> Int# -> Int16X32# -> State# s -> State# s
+writeInt16X32OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt32X16OffAddr# :: Addr# -> Int# -> Int32X16# -> State# s -> State# s
+writeInt32X16OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeInt64X8OffAddr# :: Addr# -> Int# -> Int64X8# -> State# s -> State# s
+writeInt64X8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord8X16OffAddr# :: Addr# -> Int# -> Word8X16# -> State# s -> State# s
+writeWord8X16OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord16X8OffAddr# :: Addr# -> Int# -> Word16X8# -> State# s -> State# s
+writeWord16X8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord32X4OffAddr# :: Addr# -> Int# -> Word32X4# -> State# s -> State# s
+writeWord32X4OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord64X2OffAddr# :: Addr# -> Int# -> Word64X2# -> State# s -> State# s
+writeWord64X2OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord8X32OffAddr# :: Addr# -> Int# -> Word8X32# -> State# s -> State# s
+writeWord8X32OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord16X16OffAddr# :: Addr# -> Int# -> Word16X16# -> State# s -> State# s
+writeWord16X16OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord32X8OffAddr# :: Addr# -> Int# -> Word32X8# -> State# s -> State# s
+writeWord32X8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord64X4OffAddr# :: Addr# -> Int# -> Word64X4# -> State# s -> State# s
+writeWord64X4OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord8X64OffAddr# :: Addr# -> Int# -> Word8X64# -> State# s -> State# s
+writeWord8X64OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord16X32OffAddr# :: Addr# -> Int# -> Word16X32# -> State# s -> State# s
+writeWord16X32OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord32X16OffAddr# :: Addr# -> Int# -> Word32X16# -> State# s -> State# s
+writeWord32X16OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeWord64X8OffAddr# :: Addr# -> Int# -> Word64X8# -> State# s -> State# s
+writeWord64X8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeFloatX4OffAddr# :: Addr# -> Int# -> FloatX4# -> State# s -> State# s
+writeFloatX4OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeDoubleX2OffAddr# :: Addr# -> Int# -> DoubleX2# -> State# s -> State# s
+writeDoubleX2OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeFloatX8OffAddr# :: Addr# -> Int# -> FloatX8# -> State# s -> State# s
+writeFloatX8OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeDoubleX4OffAddr# :: Addr# -> Int# -> DoubleX4# -> State# s -> State# s
+writeDoubleX4OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeFloatX16OffAddr# :: Addr# -> Int# -> FloatX16# -> State# s -> State# s
+writeFloatX16OffAddr# = let x = x in x
+
+-- | Write vector; offset in bytes. 
+
+writeDoubleX8OffAddr# :: Addr# -> Int# -> DoubleX8# -> State# s -> State# s
+writeDoubleX8OffAddr# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt8ArrayAsInt8X16# :: ByteArray# -> Int# -> Int8X16#
+indexInt8ArrayAsInt8X16# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt16ArrayAsInt16X8# :: ByteArray# -> Int# -> Int16X8#
+indexInt16ArrayAsInt16X8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt32ArrayAsInt32X4# :: ByteArray# -> Int# -> Int32X4#
+indexInt32ArrayAsInt32X4# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
 
 indexInt64ArrayAsInt64X2# :: ByteArray# -> Int# -> Int64X2#
 indexInt64ArrayAsInt64X2# = let x = x in x
 
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt8ArrayAsInt8X32# :: ByteArray# -> Int# -> Int8X32#
+indexInt8ArrayAsInt8X32# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt16ArrayAsInt16X16# :: ByteArray# -> Int# -> Int16X16#
+indexInt16ArrayAsInt16X16# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt32ArrayAsInt32X8# :: ByteArray# -> Int# -> Int32X8#
+indexInt32ArrayAsInt32X8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt64ArrayAsInt64X4# :: ByteArray# -> Int# -> Int64X4#
+indexInt64ArrayAsInt64X4# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt8ArrayAsInt8X64# :: ByteArray# -> Int# -> Int8X64#
+indexInt8ArrayAsInt8X64# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt16ArrayAsInt16X32# :: ByteArray# -> Int# -> Int16X32#
+indexInt16ArrayAsInt16X32# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt32ArrayAsInt32X16# :: ByteArray# -> Int# -> Int32X16#
+indexInt32ArrayAsInt32X16# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexInt64ArrayAsInt64X8# :: ByteArray# -> Int# -> Int64X8#
+indexInt64ArrayAsInt64X8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord8ArrayAsWord8X16# :: ByteArray# -> Int# -> Word8X16#
+indexWord8ArrayAsWord8X16# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord16ArrayAsWord16X8# :: ByteArray# -> Int# -> Word16X8#
+indexWord16ArrayAsWord16X8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord32ArrayAsWord32X4# :: ByteArray# -> Int# -> Word32X4#
+indexWord32ArrayAsWord32X4# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord64ArrayAsWord64X2# :: ByteArray# -> Int# -> Word64X2#
+indexWord64ArrayAsWord64X2# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord8ArrayAsWord8X32# :: ByteArray# -> Int# -> Word8X32#
+indexWord8ArrayAsWord8X32# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord16ArrayAsWord16X16# :: ByteArray# -> Int# -> Word16X16#
+indexWord16ArrayAsWord16X16# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord32ArrayAsWord32X8# :: ByteArray# -> Int# -> Word32X8#
+indexWord32ArrayAsWord32X8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord64ArrayAsWord64X4# :: ByteArray# -> Int# -> Word64X4#
+indexWord64ArrayAsWord64X4# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord8ArrayAsWord8X64# :: ByteArray# -> Int# -> Word8X64#
+indexWord8ArrayAsWord8X64# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord16ArrayAsWord16X32# :: ByteArray# -> Int# -> Word16X32#
+indexWord16ArrayAsWord16X32# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord32ArrayAsWord32X16# :: ByteArray# -> Int# -> Word32X16#
+indexWord32ArrayAsWord32X16# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexWord64ArrayAsWord64X8# :: ByteArray# -> Int# -> Word64X8#
+indexWord64ArrayAsWord64X8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexFloatArrayAsFloatX4# :: ByteArray# -> Int# -> FloatX4#
+indexFloatArrayAsFloatX4# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexDoubleArrayAsDoubleX2# :: ByteArray# -> Int# -> DoubleX2#
+indexDoubleArrayAsDoubleX2# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexFloatArrayAsFloatX8# :: ByteArray# -> Int# -> FloatX8#
+indexFloatArrayAsFloatX8# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexDoubleArrayAsDoubleX4# :: ByteArray# -> Int# -> DoubleX4#
+indexDoubleArrayAsDoubleX4# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexFloatArrayAsFloatX16# :: ByteArray# -> Int# -> FloatX16#
+indexFloatArrayAsFloatX16# = let x = x in x
+
+-- | Read a vector from specified index of immutable array of scalars; offset is in scalar elements. 
+
+indexDoubleArrayAsDoubleX8# :: ByteArray# -> Int# -> DoubleX8#
+indexDoubleArrayAsDoubleX8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt8ArrayAsInt8X16# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int8X16# #)
+readInt8ArrayAsInt8X16# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt16ArrayAsInt16X8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int16X8# #)
+readInt16ArrayAsInt16X8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt32ArrayAsInt32X4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X4# #)
+readInt32ArrayAsInt32X4# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
 readInt64ArrayAsInt64X2# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int64X2# #)
 readInt64ArrayAsInt64X2# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt8ArrayAsInt8X32# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int8X32# #)
+readInt8ArrayAsInt8X32# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt16ArrayAsInt16X16# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int16X16# #)
+readInt16ArrayAsInt16X16# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt32ArrayAsInt32X8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X8# #)
+readInt32ArrayAsInt32X8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt64ArrayAsInt64X4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int64X4# #)
+readInt64ArrayAsInt64X4# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt8ArrayAsInt8X64# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int8X64# #)
+readInt8ArrayAsInt8X64# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt16ArrayAsInt16X32# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int16X32# #)
+readInt16ArrayAsInt16X32# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt32ArrayAsInt32X16# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int32X16# #)
+readInt32ArrayAsInt32X16# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readInt64ArrayAsInt64X8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Int64X8# #)
+readInt64ArrayAsInt64X8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord8ArrayAsWord8X16# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word8X16# #)
+readWord8ArrayAsWord8X16# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord16ArrayAsWord16X8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word16X8# #)
+readWord16ArrayAsWord16X8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord32ArrayAsWord32X4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word32X4# #)
+readWord32ArrayAsWord32X4# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord64ArrayAsWord64X2# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word64X2# #)
+readWord64ArrayAsWord64X2# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord8ArrayAsWord8X32# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word8X32# #)
+readWord8ArrayAsWord8X32# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord16ArrayAsWord16X16# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word16X16# #)
+readWord16ArrayAsWord16X16# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord32ArrayAsWord32X8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word32X8# #)
+readWord32ArrayAsWord32X8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord64ArrayAsWord64X4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word64X4# #)
+readWord64ArrayAsWord64X4# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord8ArrayAsWord8X64# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word8X64# #)
+readWord8ArrayAsWord8X64# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord16ArrayAsWord16X32# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word16X32# #)
+readWord16ArrayAsWord16X32# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord32ArrayAsWord32X16# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word32X16# #)
+readWord32ArrayAsWord32X16# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readWord64ArrayAsWord64X8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,Word64X8# #)
+readWord64ArrayAsWord64X8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readFloatArrayAsFloatX4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX4# #)
+readFloatArrayAsFloatX4# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readDoubleArrayAsDoubleX2# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX2# #)
+readDoubleArrayAsDoubleX2# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readFloatArrayAsFloatX8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX8# #)
+readFloatArrayAsFloatX8# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readDoubleArrayAsDoubleX4# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX4# #)
+readDoubleArrayAsDoubleX4# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readFloatArrayAsFloatX16# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,FloatX16# #)
+readFloatArrayAsFloatX16# = let x = x in x
+
+-- | Read a vector from specified index of mutable array of scalars; offset is in scalar elements. 
+
+readDoubleArrayAsDoubleX8# :: MutableByteArray# s -> Int# -> State# s -> (# State# s,DoubleX8# #)
+readDoubleArrayAsDoubleX8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt8ArrayAsInt8X16# :: MutableByteArray# s -> Int# -> Int8X16# -> State# s -> State# s
+writeInt8ArrayAsInt8X16# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt16ArrayAsInt16X8# :: MutableByteArray# s -> Int# -> Int16X8# -> State# s -> State# s
+writeInt16ArrayAsInt16X8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt32ArrayAsInt32X4# :: MutableByteArray# s -> Int# -> Int32X4# -> State# s -> State# s
+writeInt32ArrayAsInt32X4# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
 
 writeInt64ArrayAsInt64X2# :: MutableByteArray# s -> Int# -> Int64X2# -> State# s -> State# s
 writeInt64ArrayAsInt64X2# = let x = x in x
 
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt8ArrayAsInt8X32# :: MutableByteArray# s -> Int# -> Int8X32# -> State# s -> State# s
+writeInt8ArrayAsInt8X32# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt16ArrayAsInt16X16# :: MutableByteArray# s -> Int# -> Int16X16# -> State# s -> State# s
+writeInt16ArrayAsInt16X16# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt32ArrayAsInt32X8# :: MutableByteArray# s -> Int# -> Int32X8# -> State# s -> State# s
+writeInt32ArrayAsInt32X8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt64ArrayAsInt64X4# :: MutableByteArray# s -> Int# -> Int64X4# -> State# s -> State# s
+writeInt64ArrayAsInt64X4# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt8ArrayAsInt8X64# :: MutableByteArray# s -> Int# -> Int8X64# -> State# s -> State# s
+writeInt8ArrayAsInt8X64# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt16ArrayAsInt16X32# :: MutableByteArray# s -> Int# -> Int16X32# -> State# s -> State# s
+writeInt16ArrayAsInt16X32# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt32ArrayAsInt32X16# :: MutableByteArray# s -> Int# -> Int32X16# -> State# s -> State# s
+writeInt32ArrayAsInt32X16# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeInt64ArrayAsInt64X8# :: MutableByteArray# s -> Int# -> Int64X8# -> State# s -> State# s
+writeInt64ArrayAsInt64X8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord8ArrayAsWord8X16# :: MutableByteArray# s -> Int# -> Word8X16# -> State# s -> State# s
+writeWord8ArrayAsWord8X16# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord16ArrayAsWord16X8# :: MutableByteArray# s -> Int# -> Word16X8# -> State# s -> State# s
+writeWord16ArrayAsWord16X8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord32ArrayAsWord32X4# :: MutableByteArray# s -> Int# -> Word32X4# -> State# s -> State# s
+writeWord32ArrayAsWord32X4# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord64ArrayAsWord64X2# :: MutableByteArray# s -> Int# -> Word64X2# -> State# s -> State# s
+writeWord64ArrayAsWord64X2# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord8ArrayAsWord8X32# :: MutableByteArray# s -> Int# -> Word8X32# -> State# s -> State# s
+writeWord8ArrayAsWord8X32# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord16ArrayAsWord16X16# :: MutableByteArray# s -> Int# -> Word16X16# -> State# s -> State# s
+writeWord16ArrayAsWord16X16# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord32ArrayAsWord32X8# :: MutableByteArray# s -> Int# -> Word32X8# -> State# s -> State# s
+writeWord32ArrayAsWord32X8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord64ArrayAsWord64X4# :: MutableByteArray# s -> Int# -> Word64X4# -> State# s -> State# s
+writeWord64ArrayAsWord64X4# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord8ArrayAsWord8X64# :: MutableByteArray# s -> Int# -> Word8X64# -> State# s -> State# s
+writeWord8ArrayAsWord8X64# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord16ArrayAsWord16X32# :: MutableByteArray# s -> Int# -> Word16X32# -> State# s -> State# s
+writeWord16ArrayAsWord16X32# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord32ArrayAsWord32X16# :: MutableByteArray# s -> Int# -> Word32X16# -> State# s -> State# s
+writeWord32ArrayAsWord32X16# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeWord64ArrayAsWord64X8# :: MutableByteArray# s -> Int# -> Word64X8# -> State# s -> State# s
+writeWord64ArrayAsWord64X8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeFloatArrayAsFloatX4# :: MutableByteArray# s -> Int# -> FloatX4# -> State# s -> State# s
+writeFloatArrayAsFloatX4# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeDoubleArrayAsDoubleX2# :: MutableByteArray# s -> Int# -> DoubleX2# -> State# s -> State# s
+writeDoubleArrayAsDoubleX2# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeFloatArrayAsFloatX8# :: MutableByteArray# s -> Int# -> FloatX8# -> State# s -> State# s
+writeFloatArrayAsFloatX8# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeDoubleArrayAsDoubleX4# :: MutableByteArray# s -> Int# -> DoubleX4# -> State# s -> State# s
+writeDoubleArrayAsDoubleX4# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeFloatArrayAsFloatX16# :: MutableByteArray# s -> Int# -> FloatX16# -> State# s -> State# s
+writeFloatArrayAsFloatX16# = let x = x in x
+
+-- | Write a vector to specified index of mutable array of scalars; offset is in scalar elements. 
+
+writeDoubleArrayAsDoubleX8# :: MutableByteArray# s -> Int# -> DoubleX8# -> State# s -> State# s
+writeDoubleArrayAsDoubleX8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt8OffAddrAsInt8X16# :: Addr# -> Int# -> Int8X16#
+indexInt8OffAddrAsInt8X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt16OffAddrAsInt16X8# :: Addr# -> Int# -> Int16X8#
+indexInt16OffAddrAsInt16X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt32OffAddrAsInt32X4# :: Addr# -> Int# -> Int32X4#
+indexInt32OffAddrAsInt32X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
 indexInt64OffAddrAsInt64X2# :: Addr# -> Int# -> Int64X2#
 indexInt64OffAddrAsInt64X2# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt8OffAddrAsInt8X32# :: Addr# -> Int# -> Int8X32#
+indexInt8OffAddrAsInt8X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt16OffAddrAsInt16X16# :: Addr# -> Int# -> Int16X16#
+indexInt16OffAddrAsInt16X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt32OffAddrAsInt32X8# :: Addr# -> Int# -> Int32X8#
+indexInt32OffAddrAsInt32X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt64OffAddrAsInt64X4# :: Addr# -> Int# -> Int64X4#
+indexInt64OffAddrAsInt64X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt8OffAddrAsInt8X64# :: Addr# -> Int# -> Int8X64#
+indexInt8OffAddrAsInt8X64# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt16OffAddrAsInt16X32# :: Addr# -> Int# -> Int16X32#
+indexInt16OffAddrAsInt16X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt32OffAddrAsInt32X16# :: Addr# -> Int# -> Int32X16#
+indexInt32OffAddrAsInt32X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexInt64OffAddrAsInt64X8# :: Addr# -> Int# -> Int64X8#
+indexInt64OffAddrAsInt64X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord8OffAddrAsWord8X16# :: Addr# -> Int# -> Word8X16#
+indexWord8OffAddrAsWord8X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord16OffAddrAsWord16X8# :: Addr# -> Int# -> Word16X8#
+indexWord16OffAddrAsWord16X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord32OffAddrAsWord32X4# :: Addr# -> Int# -> Word32X4#
+indexWord32OffAddrAsWord32X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord64OffAddrAsWord64X2# :: Addr# -> Int# -> Word64X2#
+indexWord64OffAddrAsWord64X2# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord8OffAddrAsWord8X32# :: Addr# -> Int# -> Word8X32#
+indexWord8OffAddrAsWord8X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord16OffAddrAsWord16X16# :: Addr# -> Int# -> Word16X16#
+indexWord16OffAddrAsWord16X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord32OffAddrAsWord32X8# :: Addr# -> Int# -> Word32X8#
+indexWord32OffAddrAsWord32X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord64OffAddrAsWord64X4# :: Addr# -> Int# -> Word64X4#
+indexWord64OffAddrAsWord64X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord8OffAddrAsWord8X64# :: Addr# -> Int# -> Word8X64#
+indexWord8OffAddrAsWord8X64# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord16OffAddrAsWord16X32# :: Addr# -> Int# -> Word16X32#
+indexWord16OffAddrAsWord16X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord32OffAddrAsWord32X16# :: Addr# -> Int# -> Word32X16#
+indexWord32OffAddrAsWord32X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexWord64OffAddrAsWord64X8# :: Addr# -> Int# -> Word64X8#
+indexWord64OffAddrAsWord64X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexFloatOffAddrAsFloatX4# :: Addr# -> Int# -> FloatX4#
+indexFloatOffAddrAsFloatX4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexDoubleOffAddrAsDoubleX2# :: Addr# -> Int# -> DoubleX2#
+indexDoubleOffAddrAsDoubleX2# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexFloatOffAddrAsFloatX8# :: Addr# -> Int# -> FloatX8#
+indexFloatOffAddrAsFloatX8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexDoubleOffAddrAsDoubleX4# :: Addr# -> Int# -> DoubleX4#
+indexDoubleOffAddrAsDoubleX4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexFloatOffAddrAsFloatX16# :: Addr# -> Int# -> FloatX16#
+indexFloatOffAddrAsFloatX16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+indexDoubleOffAddrAsDoubleX8# :: Addr# -> Int# -> DoubleX8#
+indexDoubleOffAddrAsDoubleX8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt8OffAddrAsInt8X16# :: Addr# -> Int# -> State# s -> (# State# s,Int8X16# #)
+readInt8OffAddrAsInt8X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt16OffAddrAsInt16X8# :: Addr# -> Int# -> State# s -> (# State# s,Int16X8# #)
+readInt16OffAddrAsInt16X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt32OffAddrAsInt32X4# :: Addr# -> Int# -> State# s -> (# State# s,Int32X4# #)
+readInt32OffAddrAsInt32X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
 
 readInt64OffAddrAsInt64X2# :: Addr# -> Int# -> State# s -> (# State# s,Int64X2# #)
 readInt64OffAddrAsInt64X2# = let x = x in x
 
+-- | Reads vector; offset in scalar elements. 
+
+readInt8OffAddrAsInt8X32# :: Addr# -> Int# -> State# s -> (# State# s,Int8X32# #)
+readInt8OffAddrAsInt8X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt16OffAddrAsInt16X16# :: Addr# -> Int# -> State# s -> (# State# s,Int16X16# #)
+readInt16OffAddrAsInt16X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt32OffAddrAsInt32X8# :: Addr# -> Int# -> State# s -> (# State# s,Int32X8# #)
+readInt32OffAddrAsInt32X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt64OffAddrAsInt64X4# :: Addr# -> Int# -> State# s -> (# State# s,Int64X4# #)
+readInt64OffAddrAsInt64X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt8OffAddrAsInt8X64# :: Addr# -> Int# -> State# s -> (# State# s,Int8X64# #)
+readInt8OffAddrAsInt8X64# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt16OffAddrAsInt16X32# :: Addr# -> Int# -> State# s -> (# State# s,Int16X32# #)
+readInt16OffAddrAsInt16X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt32OffAddrAsInt32X16# :: Addr# -> Int# -> State# s -> (# State# s,Int32X16# #)
+readInt32OffAddrAsInt32X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readInt64OffAddrAsInt64X8# :: Addr# -> Int# -> State# s -> (# State# s,Int64X8# #)
+readInt64OffAddrAsInt64X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord8OffAddrAsWord8X16# :: Addr# -> Int# -> State# s -> (# State# s,Word8X16# #)
+readWord8OffAddrAsWord8X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord16OffAddrAsWord16X8# :: Addr# -> Int# -> State# s -> (# State# s,Word16X8# #)
+readWord16OffAddrAsWord16X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord32OffAddrAsWord32X4# :: Addr# -> Int# -> State# s -> (# State# s,Word32X4# #)
+readWord32OffAddrAsWord32X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord64OffAddrAsWord64X2# :: Addr# -> Int# -> State# s -> (# State# s,Word64X2# #)
+readWord64OffAddrAsWord64X2# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord8OffAddrAsWord8X32# :: Addr# -> Int# -> State# s -> (# State# s,Word8X32# #)
+readWord8OffAddrAsWord8X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord16OffAddrAsWord16X16# :: Addr# -> Int# -> State# s -> (# State# s,Word16X16# #)
+readWord16OffAddrAsWord16X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord32OffAddrAsWord32X8# :: Addr# -> Int# -> State# s -> (# State# s,Word32X8# #)
+readWord32OffAddrAsWord32X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord64OffAddrAsWord64X4# :: Addr# -> Int# -> State# s -> (# State# s,Word64X4# #)
+readWord64OffAddrAsWord64X4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord8OffAddrAsWord8X64# :: Addr# -> Int# -> State# s -> (# State# s,Word8X64# #)
+readWord8OffAddrAsWord8X64# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord16OffAddrAsWord16X32# :: Addr# -> Int# -> State# s -> (# State# s,Word16X32# #)
+readWord16OffAddrAsWord16X32# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord32OffAddrAsWord32X16# :: Addr# -> Int# -> State# s -> (# State# s,Word32X16# #)
+readWord32OffAddrAsWord32X16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readWord64OffAddrAsWord64X8# :: Addr# -> Int# -> State# s -> (# State# s,Word64X8# #)
+readWord64OffAddrAsWord64X8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readFloatOffAddrAsFloatX4# :: Addr# -> Int# -> State# s -> (# State# s,FloatX4# #)
+readFloatOffAddrAsFloatX4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readDoubleOffAddrAsDoubleX2# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX2# #)
+readDoubleOffAddrAsDoubleX2# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readFloatOffAddrAsFloatX8# :: Addr# -> Int# -> State# s -> (# State# s,FloatX8# #)
+readFloatOffAddrAsFloatX8# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readDoubleOffAddrAsDoubleX4# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX4# #)
+readDoubleOffAddrAsDoubleX4# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readFloatOffAddrAsFloatX16# :: Addr# -> Int# -> State# s -> (# State# s,FloatX16# #)
+readFloatOffAddrAsFloatX16# = let x = x in x
+
+-- | Reads vector; offset in scalar elements. 
+
+readDoubleOffAddrAsDoubleX8# :: Addr# -> Int# -> State# s -> (# State# s,DoubleX8# #)
+readDoubleOffAddrAsDoubleX8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt8OffAddrAsInt8X16# :: Addr# -> Int# -> Int8X16# -> State# s -> State# s
+writeInt8OffAddrAsInt8X16# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt16OffAddrAsInt16X8# :: Addr# -> Int# -> Int16X8# -> State# s -> State# s
+writeInt16OffAddrAsInt16X8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt32OffAddrAsInt32X4# :: Addr# -> Int# -> Int32X4# -> State# s -> State# s
+writeInt32OffAddrAsInt32X4# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
 writeInt64OffAddrAsInt64X2# :: Addr# -> Int# -> Int64X2# -> State# s -> State# s
 writeInt64OffAddrAsInt64X2# = let x = x in x
 
-prefetchByteArray# :: ByteArray# -> Int# -> ByteArray#
-prefetchByteArray# = let x = x in x
+-- | Write vector; offset in scalar elements. 
 
-prefetchMutableByteArray# :: MutableByteArray# s -> Int# -> State# s -> State# s
-prefetchMutableByteArray# = let x = x in x
+writeInt8OffAddrAsInt8X32# :: Addr# -> Int# -> Int8X32# -> State# s -> State# s
+writeInt8OffAddrAsInt8X32# = let x = x in x
 
-prefetchAddr# :: Addr# -> Int# -> Addr#
-prefetchAddr# = let x = x in x
+-- | Write vector; offset in scalar elements. 
 
+writeInt16OffAddrAsInt16X16# :: Addr# -> Int# -> Int16X16# -> State# s -> State# s
+writeInt16OffAddrAsInt16X16# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt32OffAddrAsInt32X8# :: Addr# -> Int# -> Int32X8# -> State# s -> State# s
+writeInt32OffAddrAsInt32X8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt64OffAddrAsInt64X4# :: Addr# -> Int# -> Int64X4# -> State# s -> State# s
+writeInt64OffAddrAsInt64X4# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt8OffAddrAsInt8X64# :: Addr# -> Int# -> Int8X64# -> State# s -> State# s
+writeInt8OffAddrAsInt8X64# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt16OffAddrAsInt16X32# :: Addr# -> Int# -> Int16X32# -> State# s -> State# s
+writeInt16OffAddrAsInt16X32# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt32OffAddrAsInt32X16# :: Addr# -> Int# -> Int32X16# -> State# s -> State# s
+writeInt32OffAddrAsInt32X16# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeInt64OffAddrAsInt64X8# :: Addr# -> Int# -> Int64X8# -> State# s -> State# s
+writeInt64OffAddrAsInt64X8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord8OffAddrAsWord8X16# :: Addr# -> Int# -> Word8X16# -> State# s -> State# s
+writeWord8OffAddrAsWord8X16# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord16OffAddrAsWord16X8# :: Addr# -> Int# -> Word16X8# -> State# s -> State# s
+writeWord16OffAddrAsWord16X8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord32OffAddrAsWord32X4# :: Addr# -> Int# -> Word32X4# -> State# s -> State# s
+writeWord32OffAddrAsWord32X4# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord64OffAddrAsWord64X2# :: Addr# -> Int# -> Word64X2# -> State# s -> State# s
+writeWord64OffAddrAsWord64X2# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord8OffAddrAsWord8X32# :: Addr# -> Int# -> Word8X32# -> State# s -> State# s
+writeWord8OffAddrAsWord8X32# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord16OffAddrAsWord16X16# :: Addr# -> Int# -> Word16X16# -> State# s -> State# s
+writeWord16OffAddrAsWord16X16# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord32OffAddrAsWord32X8# :: Addr# -> Int# -> Word32X8# -> State# s -> State# s
+writeWord32OffAddrAsWord32X8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord64OffAddrAsWord64X4# :: Addr# -> Int# -> Word64X4# -> State# s -> State# s
+writeWord64OffAddrAsWord64X4# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord8OffAddrAsWord8X64# :: Addr# -> Int# -> Word8X64# -> State# s -> State# s
+writeWord8OffAddrAsWord8X64# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord16OffAddrAsWord16X32# :: Addr# -> Int# -> Word16X32# -> State# s -> State# s
+writeWord16OffAddrAsWord16X32# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord32OffAddrAsWord32X16# :: Addr# -> Int# -> Word32X16# -> State# s -> State# s
+writeWord32OffAddrAsWord32X16# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeWord64OffAddrAsWord64X8# :: Addr# -> Int# -> Word64X8# -> State# s -> State# s
+writeWord64OffAddrAsWord64X8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeFloatOffAddrAsFloatX4# :: Addr# -> Int# -> FloatX4# -> State# s -> State# s
+writeFloatOffAddrAsFloatX4# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeDoubleOffAddrAsDoubleX2# :: Addr# -> Int# -> DoubleX2# -> State# s -> State# s
+writeDoubleOffAddrAsDoubleX2# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeFloatOffAddrAsFloatX8# :: Addr# -> Int# -> FloatX8# -> State# s -> State# s
+writeFloatOffAddrAsFloatX8# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeDoubleOffAddrAsDoubleX4# :: Addr# -> Int# -> DoubleX4# -> State# s -> State# s
+writeDoubleOffAddrAsDoubleX4# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeFloatOffAddrAsFloatX16# :: Addr# -> Int# -> FloatX16# -> State# s -> State# s
+writeFloatOffAddrAsFloatX16# = let x = x in x
+
+-- | Write vector; offset in scalar elements. 
+
+writeDoubleOffAddrAsDoubleX8# :: Addr# -> Int# -> DoubleX8# -> State# s -> State# s
+writeDoubleOffAddrAsDoubleX8# = let x = x in x
+
+prefetchByteArray3# :: ByteArray# -> Int# -> ByteArray#
+prefetchByteArray3# = let x = x in x
+
+prefetchMutableByteArray3# :: MutableByteArray# s -> Int# -> State# s -> State# s
+prefetchMutableByteArray3# = let x = x in x
+
+prefetchAddr3# :: Addr# -> Int# -> Addr#
+prefetchAddr3# = let x = x in x
+
+prefetchByteArray2# :: ByteArray# -> Int# -> ByteArray#
+prefetchByteArray2# = let x = x in x
+
+prefetchMutableByteArray2# :: MutableByteArray# s -> Int# -> State# s -> State# s
+prefetchMutableByteArray2# = let x = x in x
+
+prefetchAddr2# :: Addr# -> Int# -> Addr#
+prefetchAddr2# = let x = x in x
+
+prefetchByteArray1# :: ByteArray# -> Int# -> ByteArray#
+prefetchByteArray1# = let x = x in x
+
+prefetchMutableByteArray1# :: MutableByteArray# s -> Int# -> State# s -> State# s
+prefetchMutableByteArray1# = let x = x in x
+
+prefetchAddr1# :: Addr# -> Int# -> Addr#
+prefetchAddr1# = let x = x in x
+
+prefetchByteArray0# :: ByteArray# -> Int# -> ByteArray#
+prefetchByteArray0# = let x = x in x
+
+prefetchMutableByteArray0# :: MutableByteArray# s -> Int# -> State# s -> State# s
+prefetchMutableByteArray0# = let x = x in x
+
+prefetchAddr0# :: Addr# -> Int# -> Addr#
+prefetchAddr0# = let x = x in x
 
 
